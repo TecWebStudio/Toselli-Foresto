@@ -99,6 +99,7 @@ export async function POST(
     return NextResponse.json({
       score,
       correct: correctCount,
+      correct_count: correctCount,
       total,
       passed,
       passing_score: passingScore,

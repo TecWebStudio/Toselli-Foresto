@@ -50,8 +50,8 @@ export default function RootLayout({
         </div>
 
         {/* Mobile layout (< lg) */}
-        <div className="relative z-10 lg:hidden min-h-screen">
-          <main className="pb-24 pt-16">{children}</main>
+        <div className="relative z-10 lg:hidden min-h-screen flex flex-col">
+          <main className="flex-1 pt-16 pb-[calc(4rem+env(safe-area-inset-bottom,0px))]">{children}</main>
           <BottomNav />
         </div>
 

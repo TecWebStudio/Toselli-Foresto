@@ -6,10 +6,12 @@ import Link from 'next/link';
 import TopBar from '@/components/TopBar';
 import { PageTransition, Confetti } from '@/lib/animations';
 import { getQuiz, submitQuiz } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import type { Quiz, QuizResult } from '@/lib/types';
 
 export default function QuizPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = use(params);
+  const { user: authUser } = useAuth();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -44,7 +46,8 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
 
     setSubmitting(true);
     try {
-      const r = await submitQuiz(Number(courseId), 1, answers);
+      if (!authUser) return;
+      const r = await submitQuiz(Number(courseId), authUser.id, answers);
       setResult(r);
       if (r.passed) {
         setShowConfetti(true);

@@ -33,19 +33,15 @@ export async function POST(request: Request) {
     const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#14b8a6'];
     const avatar_color = colors[Math.floor(Math.random() * colors.length)];
 
-    const result = await db.execute({
-      sql: `INSERT INTO auth_users (email, password_hash, role, display_name, username, avatar_color, city, region, lat, lng, company_name, company_website)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [email, password_hash, role, display_name, username, avatar_color, city || '', region || '', lat || null, lng || null, company_name || null, company_website || null],
-    });
+    const batchResult = await db.batch([
+      {
+        sql: `INSERT INTO auth_users (email, password_hash, role, display_name, username, avatar_color, city, region, lat, lng, company_name, company_website)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [email, password_hash, role, display_name, username, avatar_color, city || '', region || '', lat || null, lng || null, company_name || null, company_website || null],
+      },
+    ], 'write');
 
-    const userId = Number(result.lastInsertRowid);
-
-    // Also store credentials in separate user_credentials table
-    await db.execute({
-      sql: `INSERT INTO user_credentials (user_id, email, password_hash) VALUES (?, ?, ?)`,
-      args: [userId, email, password_hash],
-    });
+    const userId = Number(batchResult[0].lastInsertRowid);
 
     const token = await createSession(userId);
     await setSessionCookie(token);

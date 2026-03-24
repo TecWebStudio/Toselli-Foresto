@@ -12,13 +12,14 @@
   /* Desktop layout vars */
   --sidebar-w: 72px;
   --right-sidebar-w: 0px;
-  --feed-max: 680px;
+  --feed-max: 720px;
 }
 
 @media (min-width: 1280px) {
   :root {
     --sidebar-w: 240px;
     --right-sidebar-w: 320px;
+    --feed-max: 860px;
   }
 }
 @media (min-width: 1024px) and (max-width: 1279px) {

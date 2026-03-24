@@ -6,6 +6,7 @@ import Link from 'next/link';
 import TopBar from '@/components/TopBar';
 import { PageTransition, AnimatedProgressBar } from '@/lib/animations';
 import { getCourse, getUserProgress, updateModuleProgress } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import type { Course, CourseModule, UserProgress } from '@/lib/types';
 
 function renderMarkdown(text: string) {
@@ -40,6 +41,7 @@ function renderMarkdown(text: string) {
 
 export default function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = use(params);
+  const { user: authUser } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,9 +49,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
   const [completing, setCompleting] = useState<number | null>(null);
 
   useEffect(() => {
+    const progressPromise = authUser
+      ? getUserProgress(authUser.id).catch(() => [])
+      : Promise.resolve([]);
+
     Promise.all([
       getCourse(Number(courseId)).catch(() => null),
-      getUserProgress(1).catch(() => []),
+      progressPromise,
     ]).then(([c, allProgress]) => {
       setCourse(c);
       if (Array.isArray(allProgress)) {
@@ -58,7 +64,7 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
       }
       setLoading(false);
     });
-  }, [courseId]);
+  }, [courseId, authUser]);
 
   const completedModules = useMemo(() => {
     return new Set(progress?.completed_modules || []);
@@ -74,9 +80,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
   };
 
   const handleCompleteModule = async (moduleIndex: number) => {
+    if (!authUser) return;
     setCompleting(moduleIndex);
     try {
-      await updateModuleProgress(1, Number(courseId), moduleIndex);
+      await updateModuleProgress(authUser.id, Number(courseId), moduleIndex);
       setProgress(prev => {
         if (!prev) return prev;
         const existing = new Set(prev.completed_modules || []);

@@ -421,14 +421,15 @@ export default function AuthPage() {
                         <AnimatePresence>
                           {(suggestions.length > 0 || localCities.length > 0) && locationQuery.length >= 2 && (
                             <motion.div
+                              key="suggestions-dropdown"
                               initial={{ opacity: 0, y: -8 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -8 }}
                               className="absolute top-full mt-1 left-0 right-0 z-50 rounded-2xl border border-white/10 bg-zinc-900/95 backdrop-blur-xl overflow-hidden shadow-2xl"
                             >
-                              {localCities.map((c) => (
+                              {localCities.map((c, i) => (
                                 <button
-                                  key={`local-${c}`}
+                                  key={`local-${i}-${c}`}
                                   onClick={() => selectCity(c, 'Italia', 0, 0)}
                                   className="flex w-full items-center gap-2 px-4 py-2.5 text-sm hover:bg-white/5 transition-colors text-left"
                                 >
@@ -442,7 +443,7 @@ export default function AuthPage() {
                                 const region = s.address.state || '';
                                 return (
                                   <button
-                                    key={i}
+                                    key={`suggestion-${i}`}
                                     onClick={() => selectCity(city, region, parseFloat(s.lat), parseFloat(s.lon))}
                                     className="flex w-full items-center gap-2 px-4 py-2.5 text-sm hover:bg-white/5 transition-colors text-left"
                                   >

@@ -7,6 +7,7 @@ import CourseCard from '@/components/CourseCard';
 import AuthGuard from '@/components/AuthGuard';
 import { PageTransition } from '@/lib/animations';
 import { getCourses, getUserProgress } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
 import type { Course, UserProgress } from '@/lib/types';
 
 const categories = [
@@ -28,6 +29,7 @@ const levels = [
 ];
 
 export default function LearnPage() {
+  const { user: authUser } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,15 +41,19 @@ export default function LearnPage() {
     if (selectedCategory) filters.category = selectedCategory;
     if (selectedLevel) filters.level = selectedLevel;
 
+    const progressPromise = authUser
+      ? getUserProgress(authUser.id).catch(() => [])
+      : Promise.resolve([]);
+
     Promise.all([
       getCourses(filters).catch(() => []),
-      getUserProgress(1).catch(() => []),
+      progressPromise,
     ]).then(([coursesData, progressData]) => {
       setCourses(coursesData);
       setProgress(progressData);
       setLoading(false);
     });
-  }, [selectedCategory, selectedLevel]);
+  }, [selectedCategory, selectedLevel, authUser]);
 
   const getProgressForCourse = (courseId: number) => {
     return progress.find((p) => p.course_id === courseId);

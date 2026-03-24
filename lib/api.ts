@@ -1,6 +1,6 @@
 // DevHub IT - API Client Library
 
-import type { Job, JobFilters, Course, Quiz, QuizResult, User, UserBadge, UserProgress, PlatformStats, NotificationsResponse, AuthUser, AuthSession, Listing, MapPoint } from './types';
+import type { Job, JobFilters, Course, Quiz, QuizResult, User, UserBadge, UserProgress, PlatformStats, NotificationsResponse, AuthUser, AuthSession, Listing, MapPoint, Post } from './types';
 
 const API_BASE = '/api';
 
@@ -143,4 +143,16 @@ export async function getMapPoints(type?: string, region?: string): Promise<MapP
   if (region) params.set('region', region);
   const q = params.toString();
   return fetchAPI<MapPoint[]>(`/listings/map${q ? `?${q}` : ''}`);
+}
+
+// Posts
+export async function getPosts(limit = 30, offset = 0): Promise<Post[]> {
+  return fetchAPI<Post[]>(`/posts?limit=${limit}&offset=${offset}`);
+}
+
+export async function createPost(data: { content: string; image_url?: string; post_type?: string; tags?: string[] }): Promise<{ id: number; success: boolean }> {
+  return fetchAPI<{ id: number; success: boolean }>('/posts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }

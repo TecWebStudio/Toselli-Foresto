@@ -3,14 +3,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import TopBar from '@/components/TopBar';
 import BadgeCard from '@/components/BadgeCard';
 import { PageTransition, AnimatedCounter, AnimatedProgressBar } from '@/lib/animations';
-import { getUser, getUserBadges, getUserProgress, getStats } from '@/lib/api';
-import type { User, UserBadge, UserProgress, PlatformStats } from '@/lib/types';
+import { getUserBadges, getUserProgress, getStats } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
+import type { UserBadge, UserProgress, PlatformStats } from '@/lib/types';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user: authUser, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
@@ -18,19 +21,22 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'badges' | 'progress' | 'stats'>('badges');
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) {
+      router.replace('/auth');
+      return;
+    }
     Promise.all([
-      getUser(1).catch(() => null),
-      getUserBadges(1).catch(() => []),
-      getUserProgress(1).catch(() => []),
+      getUserBadges(authUser.id).catch(() => []),
+      getUserProgress(authUser.id).catch(() => []),
       getStats().catch(() => null),
-    ]).then(([u, b, p, s]) => {
-      setUser(u);
+    ]).then(([b, p, s]) => {
       setBadges(b);
       setProgress(p);
       setStats(s);
       setLoading(false);
     });
-  }, []);
+  }, [authUser, authLoading, router]);
 
   if (loading) {
     return (
@@ -74,8 +80,9 @@ export default function ProfilePage() {
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.2 }}
                 className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white/15 backdrop-blur-md border-2 border-white/25 text-3xl font-black"
+                style={{ background: authUser?.avatar_color ? `${authUser.avatar_color}44` : undefined }}
               >
-                {user?.username?.charAt(0).toUpperCase() || 'U'}
+                {authUser?.display_name?.charAt(0).toUpperCase() || authUser?.username?.charAt(0).toUpperCase() || 'U'}
               </motion.div>
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
@@ -83,7 +90,7 @@ export default function ProfilePage() {
                 transition={{ delay: 0.3 }}
                 className="text-xl font-black"
               >
-                {user?.display_name || user?.username || 'Utente'}
+                {authUser?.display_name || authUser?.username || 'Utente'}
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -91,16 +98,24 @@ export default function ProfilePage() {
                 transition={{ delay: 0.35 }}
                 className="text-sm text-indigo-200 mt-0.5"
               >
-                {user?.email}
+                @{authUser?.username} {authUser?.city ? `· 📍 ${authUser.city}` : ''}
               </motion.p>
-              {user?.bio && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.37 }}
+                className="text-xs text-indigo-300 mt-0.5"
+              >
+                {authUser?.email}
+              </motion.p>
+              {authUser?.bio && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
                   className="mt-2 text-sm text-indigo-100"
                 >
-                  {user.bio}
+                  {authUser.bio}
                 </motion.p>
               )}
               <motion.div
