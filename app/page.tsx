@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/TopBar';
 import CourseCard from '@/components/CourseCard';
-import { AnimatedCounter, FloatingParticles, PageTransition } from '@/lib/animations';
+import { AnimatedCounter, FloatingParticles, PageTransition, ShimmerSkeleton, StaggeredReveal, StaggeredRevealItem, SpringButton } from '@/lib/animations';
 import { getListings, getCourses, getStats, getPosts, createPost } from '@/lib/api';
 import type { Listing, Course, PlatformStats, Post } from '@/lib/types';
 import { useAuth } from '@/lib/AuthContext';
@@ -158,7 +158,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
-              className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800/80 dark:bg-zinc-900/80"
+              className="rounded-2xl border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 p-4 shadow-xs"
             >
               {!composerOpen ? (
                 <button
@@ -171,7 +171,7 @@ export default function Home() {
                   >
                     {(user.display_name || 'U').charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 px-4 py-2.5 text-left text-sm text-zinc-400">
+                  <div className="flex-1 rounded-xl bg-surface-2 dark:bg-surface-2 px-4 py-2.5 text-left text-sm text-muted">
                     Condividi qualcosa con la community IT...
                   </div>
                 </button>
@@ -192,22 +192,22 @@ export default function Home() {
                         maxLength={2000}
                         rows={3}
                         autoFocus
-                        className="w-full resize-none rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 px-3 py-2.5 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500/50"
+                        className="w-full resize-none rounded-xl bg-surface-1 dark:bg-surface-2/50 border border-glass-border-subtle px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent/50"
                       />
                       <input
                         value={postTags}
                         onChange={(e) => setPostTags(e.target.value)}
                         placeholder="Tag separati da virgola (es: react, typescript, cloud)"
-                        className="mt-2 w-full rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/50 dark:border-zinc-700/50 px-3 py-2 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500/50"
+                        className="mt-2 w-full rounded-xl bg-surface-1 dark:bg-surface-2/50 border border-glass-border-subtle px-3 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent/50"
                       />
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-3 pl-12">
-                    <span className="text-xs text-zinc-400">{postContent.length}/2000</span>
+                    <span className="text-xs text-muted-foreground">{postContent.length}/2000</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setComposerOpen(false); setPostContent(''); setPostTags(''); }}
-                        className="rounded-xl px-4 py-1.5 text-xs font-semibold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        className="rounded-xl px-4 py-1.5 text-xs font-semibold text-muted hover:bg-surface-2 transition-colors"
                       >
                         Annulla
                       </button>
@@ -228,10 +228,10 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
-              className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 p-4 text-center"
+              className="rounded-2xl border border-dashed border-glass-border dark:border-glass-border p-4 text-center"
             >
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                <Link href="/auth" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Accedi</Link>
+              <p className="text-sm text-muted">
+                <Link href="/auth" className="font-semibold text-accent hover:underline">Accedi</Link>
                 {' '}per pubblicare un post nella community IT
               </p>
             </motion.div>
@@ -243,18 +243,19 @@ export default function Home() {
           <section className="px-4 pb-4">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-purple-500" />
-              <h3 className="text-lg font-black text-zinc-900 dark:text-white">Community</h3>
+              <h3 className="text-lg font-black text-foreground">Community</h3>
             </div>
-            <div className="space-y-3">
+            <StaggeredReveal className="space-y-3">
               <AnimatePresence mode="popLayout">
                 {posts.map((post, i) => (
+                  <StaggeredRevealItem key={post.id}>
                   <motion.div
-                    key={post.id}
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3, delay: i * 0.04 }}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 dark:border-zinc-800/80 dark:bg-zinc-900/80"
+                    layout
+                    className="rounded-2xl border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 p-4 shadow-xs transition-shadow duration-300 hover:shadow-md"
                   >
                     <div className="flex items-center gap-3 mb-2.5">
                       <div
@@ -264,15 +265,15 @@ export default function Home() {
                         {(post.display_name || post.username || 'U').charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                        <p className="text-sm font-bold text-foreground">
                           {post.display_name || post.username}
                         </p>
-                        <p className="text-[10px] text-zinc-400">
+                        <p className="text-[10px] text-muted-foreground">
                           @{post.username} · {new Date(post.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
                     </div>
-                    <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">
                       {post.content}
                     </p>
                     {post.tags && post.tags.length > 0 && (
@@ -284,14 +285,15 @@ export default function Home() {
                         ))}
                       </div>
                     )}
-                    <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
-                      <span className="text-xs text-zinc-400 flex items-center gap-1">❤️ {post.likes_count}</span>
-                      <span className="text-xs text-zinc-400 flex items-center gap-1">💬 {post.comments_count}</span>
+                    <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-glass-border-subtle">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">❤️ {post.likes_count}</span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">💬 {post.comments_count}</span>
                     </div>
                   </motion.div>
+                  </StaggeredRevealItem>
                 ))}
               </AnimatePresence>
-            </div>
+            </StaggeredReveal>
           </section>
         )}
 
@@ -305,9 +307,9 @@ export default function Home() {
           >
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-purple-500" />
-              <h3 className="text-lg font-black text-zinc-900 dark:text-white">Ultimi annunci</h3>
+              <h3 className="text-lg font-black text-foreground">Ultimi annunci</h3>
             </div>
-            <Link href="/listings" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 group">
+            <Link href="/listings" className="text-sm font-semibold text-accent hover:underline flex items-center gap-1 group">
               Vedi tutti
               <motion.span
                 className="inline-block"
@@ -321,25 +323,24 @@ export default function Home() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className={`skeleton rounded-2xl h-28 stagger-${i}`} />
+                <ShimmerSkeleton key={i} className="h-28 w-full" rounded="rounded-2xl" />
               ))}
             </div>
           ) : listings.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 p-6 text-center"
+              className="rounded-2xl border border-dashed border-glass-border dark:border-glass-border p-6 text-center"
             >
               <p className="text-2xl mb-2">📋</p>
-              <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Nessun annuncio ancora</p>
-              <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Pubblica il primo annuncio dalla community!</p>
+              <p className="text-sm font-semibold text-muted">Nessun annuncio ancora</p>
+              <p className="text-xs text-muted-foreground mt-1">Pubblica il primo annuncio dalla community!</p>
               <Link href="/publish">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
+                <SpringButton
                   className="mt-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-500/25"
                 >
                   Pubblica
-                </motion.button>
+                </SpringButton>
               </Link>
             </motion.div>
           ) : (
@@ -352,7 +353,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
-                    className="rounded-2xl border border-zinc-200/80 bg-white p-4 transition-all hover:border-indigo-300/60 dark:border-zinc-800/80 dark:bg-zinc-900/80 card-shine group"
+                    className="rounded-2xl border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 p-4 transition-all shadow-xs hover:shadow-lg card-shine group"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -363,7 +364,7 @@ export default function Home() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-zinc-900 dark:text-white text-sm leading-tight truncate">
+                          <h3 className="font-semibold text-foreground text-sm leading-tight truncate">
                             {listing.title}
                           </h3>
                           <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -374,12 +375,12 @@ export default function Home() {
                             {isOffer ? '💼 Offerta' : '🧑‍💻 Richiesta'}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        <p className="text-xs text-muted mt-0.5">
                           {listing.author_name}{listing.city ? ` · 📍 ${listing.city}` : ''}
                         </p>
                       </div>
                     </div>
-                    <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">{listing.description}</p>
+                    <p className="mt-2 text-xs text-muted line-clamp-2">{listing.description}</p>
                     <div className="mt-2.5 flex flex-wrap items-center gap-2">
                       {listing.level && (
                         <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
@@ -409,9 +410,9 @@ export default function Home() {
           >
             <div className="flex items-center gap-2">
               <div className="w-1 h-5 rounded-full bg-gradient-to-b from-purple-500 to-pink-500" />
-              <h3 className="text-lg font-black text-zinc-900 dark:text-white">Percorsi formativi</h3>
+              <h3 className="text-lg font-black text-foreground">Percorsi formativi</h3>
             </div>
-            <Link href="/learn" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+            <Link href="/learn" className="text-sm font-semibold text-accent hover:underline flex items-center gap-1">
               Vedi tutti
               <motion.span
                 className="inline-block"
@@ -425,7 +426,7 @@ export default function Home() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2].map((i) => (
-                <div key={i} className={`skeleton rounded-2xl h-32 stagger-${i + 3}`} />
+                <ShimmerSkeleton key={i} className="h-32 w-full" rounded="rounded-2xl" />
               ))}
             </div>
           ) : (
@@ -454,9 +455,9 @@ export default function Home() {
               >
                 💡
               </motion.span>
-              <h3 className="font-black text-zinc-900 dark:text-white">Consiglio del giorno</h3>
+              <h3 className="font-black text-foreground">Consiglio del giorno</h3>
             </div>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            <p className="text-sm text-muted leading-relaxed">
               Le aziende IT italiane nel 2026 cercano principalmente profili con competenze in{' '}
               <span className="font-bold text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 px-1 rounded">Cloud (AWS/Azure)</span>,{' '}
               <span className="font-bold text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 px-1 rounded">React + TypeScript</span> e{' '}
@@ -475,7 +476,7 @@ export default function Home() {
           >
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
-              <h3 className="text-lg font-black text-zinc-900 dark:text-white">Tecnologie trending</h3>
+              <h3 className="text-lg font-black text-foreground">Tecnologie trending</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               {[
@@ -494,7 +495,7 @@ export default function Home() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.8 + i * 0.05 }}
                   whileHover={{ scale: 1.1, y: -2 }}
-                  className="chip-glow inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 shadow-sm hover:shadow-md transition-shadow cursor-default"
+                  className="chip-glow inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 text-foreground/80 shadow-xs hover:shadow-md transition-shadow cursor-default"
                 >
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tech.color }} />
                   {tech.name}

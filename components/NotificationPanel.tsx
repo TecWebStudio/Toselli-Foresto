@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Bell } from 'lucide-react';
 import Link from 'next/link';
 import { getNotifications, markNotificationsRead } from '@/lib/api';
+import { ShimmerSkeleton } from '@/lib/animations';
 import type { Notification } from '@/lib/types';
 
 const typeIcons: Record<string, string> = {
@@ -99,20 +101,14 @@ export default function NotificationPanel() {
         whileTap={{ scale: 0.9 }}
         onClick={handleOpen}
         aria-label="Notifiche"
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl text-zinc-600 transition-colors hover:bg-indigo-50 dark:text-zinc-300 dark:hover:bg-indigo-950/40"
+        className="relative flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-surface-2 dark:hover:bg-surface-2"
       >
-        <motion.svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          className="w-5 h-5"
+        <motion.div
           animate={unreadCount > 0 ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
           transition={{ duration: 0.5, repeat: unreadCount > 0 ? Infinity : 0, repeatDelay: 5 }}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-        </motion.svg>
+          <Bell className="w-5 h-5" strokeWidth={1.5} />
+        </motion.div>
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}
@@ -131,10 +127,10 @@ export default function NotificationPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="absolute left-0 top-12 z-50 w-80 rounded-2xl border border-zinc-200/60 bg-white/95 shadow-2xl shadow-zinc-900/10 backdrop-blur-xl dark:border-zinc-700/60 dark:bg-zinc-900/95 lg:left-0 lg:right-auto"
+            className="absolute left-0 top-12 z-50 w-80 rounded-2xl border border-glass-border-subtle bg-glass-strong shadow-xl backdrop-blur-2xl lg:left-0 lg:right-auto"
           >
-            <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-              <h3 className="font-bold text-zinc-900 dark:text-white">Notifiche</h3>
+            <div className="flex items-center justify-between border-b border-glass-border-subtle px-4 py-3">
+              <h3 className="font-bold text-foreground">Notifiche</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
@@ -148,7 +144,7 @@ export default function NotificationPanel() {
               {loading ? (
                 <div className="space-y-2 p-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="skeleton h-14 rounded-xl" />
+                    <ShimmerSkeleton key={i} className="h-14 w-full" rounded="rounded-xl" />
                   ))}
                 </div>
               ) : notifications.length === 0 ? (

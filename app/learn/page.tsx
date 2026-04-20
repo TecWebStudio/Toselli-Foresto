@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import TopBar from '@/components/TopBar';
 import CourseCard from '@/components/CourseCard';
 import AuthGuard from '@/components/AuthGuard';
-import { PageTransition } from '@/lib/animations';
+import { PageTransition, ShimmerSkeleton, StaggeredReveal, StaggeredRevealItem } from '@/lib/animations';
 import { getCourses, getUserProgress } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { Course, UserProgress } from '@/lib/types';
@@ -169,7 +169,7 @@ export default function LearnPage() {
         <div className="px-4 pb-6 space-y-3">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className={`skeleton rounded-2xl h-36 stagger-${i + 1}`} />
+              <ShimmerSkeleton key={i} className="h-36 w-full" rounded="rounded-2xl" />
             ))
           ) : courses.length === 0 ? (
             <motion.div
@@ -188,14 +188,17 @@ export default function LearnPage() {
               <p className="mt-1 text-sm text-zinc-500">Prova a cambiare i filtri</p>
             </motion.div>
           ) : (
-            courses.map((course, i) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                progress={getProgressForCourse(course.id)}
-                index={i}
-              />
-            ))
+            <StaggeredReveal className="space-y-3">
+              {courses.map((course, i) => (
+                <StaggeredRevealItem key={course.id}>
+                  <CourseCard
+                    course={course}
+                    progress={getProgressForCourse(course.id)}
+                    index={i}
+                  />
+                </StaggeredRevealItem>
+              ))}
+            </StaggeredReveal>
           )}
         </div>
       </PageTransition>

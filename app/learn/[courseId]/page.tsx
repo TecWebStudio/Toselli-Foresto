@@ -4,7 +4,7 @@ import { use, useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import TopBar from '@/components/TopBar';
-import { PageTransition, AnimatedProgressBar } from '@/lib/animations';
+import { PageTransition, AnimatedProgressBar, ShimmerSkeleton } from '@/lib/animations';
 import { getCourse, getUserProgress, updateModuleProgress } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { Course, CourseModule, UserProgress } from '@/lib/types';
@@ -106,10 +106,10 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
       <>
         <TopBar />
         <div className="p-4 space-y-4">
-          <div className="skeleton rounded-2xl h-48" />
-          <div className="skeleton rounded-2xl h-12 stagger-1" />
-          <div className="skeleton rounded-2xl h-32 stagger-2" />
-          <div className="skeleton rounded-2xl h-32 stagger-3" />
+          <ShimmerSkeleton className="h-48 w-full" rounded="rounded-2xl" />
+          <ShimmerSkeleton className="h-12 w-full" rounded="rounded-2xl" />
+          <ShimmerSkeleton className="h-32 w-full" rounded="rounded-2xl" />
+          <ShimmerSkeleton className="h-32 w-full" rounded="rounded-2xl" />
         </div>
       </>
     );

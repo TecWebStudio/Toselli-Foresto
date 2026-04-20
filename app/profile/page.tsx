@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import TopBar from '@/components/TopBar';
 import BadgeCard from '@/components/BadgeCard';
-import { PageTransition, AnimatedCounter, AnimatedProgressBar } from '@/lib/animations';
+import { PageTransition, AnimatedCounter, AnimatedProgressBar, ShimmerSkeleton } from '@/lib/animations';
 import { getUserBadges, getUserProgress, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { UserBadge, UserProgress, PlatformStats } from '@/lib/types';
@@ -43,9 +43,9 @@ export default function ProfilePage() {
       <>
         <TopBar />
         <div className="p-4 space-y-4">
-          <div className="skeleton rounded-2xl h-52" />
-          <div className="skeleton rounded-2xl h-12" />
-          <div className="skeleton rounded-2xl h-32" />
+          <ShimmerSkeleton className="h-52 w-full" rounded="rounded-2xl" />
+          <ShimmerSkeleton className="h-12 w-full" rounded="rounded-2xl" />
+          <ShimmerSkeleton className="h-32 w-full" rounded="rounded-2xl" />
         </div>
       </>
     );

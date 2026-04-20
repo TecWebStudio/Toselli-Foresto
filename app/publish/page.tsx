@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { SpringButton } from '@/lib/animations';
 import { createListing } from '@/lib/api';
 import Link from 'next/link';
 
@@ -292,21 +294,20 @@ export default function PublishPage() {
           </motion.div>
         )}
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
+        <SpringButton
           onClick={handleSubmit}
           disabled={submitting}
           className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:opacity-90 transition-all disabled:opacity-50"
         >
           {submitting ? (
             <span className="flex items-center justify-center gap-2">
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31" strokeDashoffset="10" /></svg>
+              <Loader2 className="w-4 h-4 animate-spin" />
               Pubblicazione…
             </span>
           ) : (
             isCompany ? '🚀 Pubblica offerta di lavoro' : '🚀 Pubblica proposta di servizio'
           )}
-        </motion.button>
+        </SpringButton>
       </div>
     </div>
   );

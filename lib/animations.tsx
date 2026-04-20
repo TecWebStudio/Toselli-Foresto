@@ -1,7 +1,18 @@
 'use client';
 
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, type Variants, type HTMLMotionProps } from 'framer-motion';
+import { useEffect, useState, useRef, type ReactNode } from 'react';
+
+// ═══════════════════════════════════════════════
+// EASING PRESETS — Premium cubic-bezier curves
+// ═══════════════════════════════════════════════
+export const ease = {
+  smooth: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  spring: { type: 'spring' as const, stiffness: 400, damping: 30 },
+  springBouncy: { type: 'spring' as const, stiffness: 500, damping: 25 },
+  springGentle: { type: 'spring' as const, stiffness: 300, damping: 35 },
+  out: [0.16, 1, 0.3, 1] as [number, number, number, number],
+};
 
 // ---- Reusable animation variants ----
 export const fadeInUp: Variants = {
@@ -396,6 +407,206 @@ export function RippleButton({
       ))}
       {children}
     </motion.button>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// PREMIUM REUSABLE ANIMATION COMPONENTS
+// ═══════════════════════════════════════════════
+
+// ---- FadeIn — Universal reveal wrapper ----
+export function FadeIn({
+  children,
+  className,
+  delay = 0,
+  duration = 0.5,
+  direction = 'up',
+  distance = 20,
+  once = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+  duration?: number;
+  direction?: 'up' | 'down' | 'left' | 'right' | 'none';
+  distance?: number;
+  once?: boolean;
+}) {
+  const dirMap = {
+    up: { y: distance },
+    down: { y: -distance },
+    left: { x: distance },
+    right: { x: -distance },
+    none: {},
+  };
+
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, ...dirMap[direction] }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once, margin: '-40px' }}
+      transition={{ duration, delay, ease: ease.smooth }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ---- HoverCard — Premium hover-activated card wrapper ----
+export function HoverCard({
+  children,
+  className,
+  glowOnHover = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  glowOnHover?: boolean;
+}) {
+  return (
+    <motion.div
+      className={`relative overflow-hidden ${className || ''}`}
+      whileHover={{
+        y: -3,
+        boxShadow: glowOnHover
+          ? '0 20px 50px -12px rgba(99, 102, 241, 0.15), 0 8px 16px -8px rgba(0,0,0,0.06)'
+          : '0 20px 50px -12px rgba(0,0,0,0.08), 0 8px 16px -8px rgba(0,0,0,0.04)',
+      }}
+      transition={{ duration: 0.3, ease: ease.smooth }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ---- SpringButton — Tactile spring feedback button ----
+export function SpringButton({
+  children,
+  className,
+  onClick,
+  disabled,
+  ...props
+}: {
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+} & Omit<HTMLMotionProps<'button'>, 'children' | 'className' | 'onClick' | 'disabled'>) {
+  return (
+    <motion.button
+      className={className}
+      onClick={onClick}
+      disabled={disabled}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.95 }}
+      transition={ease.springBouncy}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+// ---- AnimatedFeedItem — For AnimatePresence in feeds ----
+export function AnimatedFeedItem({
+  children,
+  className,
+  layoutId,
+}: {
+  children: ReactNode;
+  className?: string;
+  layoutId?: string;
+}) {
+  return (
+    <motion.div
+      layout
+      layoutId={layoutId}
+      className={className}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.2 } }}
+      transition={{ duration: 0.4, ease: ease.smooth }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ---- ShimmerSkeleton — Premium wave shimmer skeleton loader ----
+export function ShimmerSkeleton({
+  className,
+  rounded = 'rounded-xl',
+}: {
+  className?: string;
+  rounded?: string;
+}) {
+  return (
+    <div className={`relative overflow-hidden bg-surface-2 ${rounded} ${className || 'h-28 w-full'}`}>
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.14) 50%, rgba(255,255,255,0.08) 60%, transparent 100%)',
+        }}
+        animate={{ x: ['-100%', '100%'] }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+      />
+    </div>
+  );
+}
+
+// ---- StaggeredReveal — Cascading entrance for lists ----
+export function StaggeredReveal({
+  children,
+  className,
+  staggerDelay = 0.06,
+  delayChildren = 0.1,
+}: {
+  children: ReactNode;
+  className?: string;
+  staggerDelay?: number;
+  delayChildren?: number;
+}) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-30px' }}
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { staggerChildren: staggerDelay, delayChildren },
+        },
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export function StaggeredRevealItem({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      className={className}
+      variants={{
+        hidden: { opacity: 0, y: 16, filter: 'blur(4px)' },
+        visible: {
+          opacity: 1,
+          y: 0,
+          filter: 'blur(0px)',
+          transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+        },
+      }}
+    >
+      {children}
+    </motion.div>
   );
 }
 

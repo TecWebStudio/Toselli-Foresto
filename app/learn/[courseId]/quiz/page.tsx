@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import TopBar from '@/components/TopBar';
-import { PageTransition, Confetti } from '@/lib/animations';
+import { PageTransition, Confetti, ShimmerSkeleton } from '@/lib/animations';
 import { getQuiz, submitQuiz } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import type { Quiz, QuizResult } from '@/lib/types';
@@ -65,8 +65,8 @@ export default function QuizPage({ params }: { params: Promise<{ courseId: strin
       <>
         <TopBar />
         <div className="p-4 space-y-4">
-          <div className="skeleton rounded-2xl h-32" />
-          <div className="skeleton rounded-2xl h-64 stagger-1" />
+          <ShimmerSkeleton className="h-32 w-full" rounded="rounded-2xl" />
+          <ShimmerSkeleton className="h-64 w-full" rounded="rounded-2xl" />
         </div>
       </>
     );

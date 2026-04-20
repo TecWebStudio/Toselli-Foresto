@@ -7,7 +7,8 @@ import AuthGuard from '@/components/AuthGuard';
 import { getListings } from '@/lib/api';
 import type { Listing } from '@/lib/types';
 import Link from 'next/link';
-import { PageTransition } from '@/lib/animations';
+import { Plus, ArrowRight } from 'lucide-react';
+import { PageTransition, ShimmerSkeleton, StaggeredReveal, StaggeredRevealItem, SpringButton } from '@/lib/animations';
 
 const CATEGORIES = [
   { id: '', label: 'Tutti', emoji: '✨' },
@@ -36,7 +37,7 @@ function ListingCard({ listing, index }: { listing: Listing; index: number }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-2xl border border-zinc-200/70 bg-white dark:bg-zinc-900/80 dark:border-zinc-800/70 p-4 transition-all hover:border-indigo-300/60 hover:shadow-lg hover:shadow-indigo-500/8 group"
+      className="rounded-2xl border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 p-4 transition-all shadow-xs hover:shadow-lg group"
     >
       <div className="flex items-start gap-3">
         {/* Avatar */}
@@ -48,7 +49,7 @@ function ListingCard({ listing, index }: { listing: Listing; index: number }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-zinc-900 dark:text-white text-sm leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <h3 className="font-bold text-foreground text-sm leading-tight group-hover:text-accent transition-colors">
               {listing.title}
             </h3>
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -59,7 +60,7 @@ function ListingCard({ listing, index }: { listing: Listing; index: number }) {
               {isOffer ? '💼 Offerta' : '🧑‍💻 Richiesta'}
             </span>
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             {listing.author_role === 'company'
               ? (listing.author_company_name || listing.author_name)
               : listing.author_name}
@@ -68,17 +69,17 @@ function ListingCard({ listing, index }: { listing: Listing; index: number }) {
         </div>
       </div>
 
-      <p className="mt-2.5 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+      <p className="mt-2.5 text-xs text-muted line-clamp-2 leading-relaxed">
         {listing.description}
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {listing.level && (
-          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${levelColors[listing.level] || 'text-zinc-500 bg-zinc-50'}`}>
+          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${levelColors[listing.level] || 'text-muted bg-surface-2'}`}>
             {listing.level.charAt(0).toUpperCase() + listing.level.slice(1)}
           </span>
         )}
-        <span className="rounded-full bg-zinc-50 dark:bg-zinc-800 px-2.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+        <span className="rounded-full bg-surface-2 dark:bg-surface-2 px-2.5 py-0.5 text-[10px] font-medium text-muted">
           {workTypeLabels[listing.work_type] || listing.work_type}
         </span>
         {listing.salary_min && listing.salary_max && (
@@ -92,9 +93,9 @@ function ListingCard({ listing, index }: { listing: Listing; index: number }) {
           </span>
         ))}
         {tags.length > 3 && (
-          <span className="text-[10px] text-zinc-400">+{tags.length - 3}</span>
+          <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
         )}
-        <span className="ml-auto text-[10px] text-zinc-300 dark:text-zinc-600">
+        <span className="ml-auto text-[10px] text-muted-foreground">
           {new Date(listing.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
         </span>
       </div>
@@ -127,20 +128,17 @@ export default function ListingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-zinc-900 dark:text-white">Bacheca</h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">Offerte & proposte dalla community</p>
+            <h1 className="text-2xl font-black text-foreground">Bacheca</h1>
+            <p className="text-sm text-muted mt-0.5">Offerte & proposte dalla community</p>
           </div>
           {user ? (
             <Link href="/publish">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
+              <SpringButton
                 className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-500/25 hover:opacity-90 transition-all"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-                </svg>
+                <Plus className="w-4 h-4" />
                 Pubblica
-              </motion.button>
+              </SpringButton>
             </Link>
           ) : (
             <Link href="/auth">
@@ -155,7 +153,7 @@ export default function ListingsPage() {
         </div>
 
         {/* Filter tabs: Tutti / Offerte / Proposte */}
-        <div className="flex rounded-2xl bg-zinc-100 dark:bg-zinc-900/50 p-1 gap-1">
+        <div className="flex rounded-2xl bg-surface-1 dark:bg-surface-1 p-1 gap-1">
           {([
             { id: 'all', label: 'Tutti' },
             { id: 'job_offer', label: '💼 Offerte' },
@@ -166,8 +164,8 @@ export default function ListingsPage() {
               onClick={() => setFilter(f.id)}
               className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all ${
                 filter === f.id
-                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                  ? 'bg-surface-0 dark:bg-surface-2 text-foreground shadow-xs'
+                  : 'text-muted hover:text-foreground'
               }`}
             >
               {f.label}
@@ -184,7 +182,7 @@ export default function ListingsPage() {
               className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 category === cat.id
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                  : 'border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-indigo-400'
+                  : 'border border-glass-border-subtle text-muted hover:border-accent'
               }`}
             >
               <span>{cat.emoji}</span> {cat.label}
@@ -205,16 +203,14 @@ export default function ListingsPage() {
                 <p className="font-bold text-white">Esplora sulla Mappa</p>
                 <p className="text-xs text-white/70">Scopri opportunità vicino a te</p>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white" className="w-5 h-5 opacity-70">
-                <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" />
-              </svg>
+              <ArrowRight className="w-5 h-5 text-white/70" />
             </div>
           </motion.div>
         </Link>
 
         {/* Results count */}
         {!loading && (
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-muted-foreground">
             {listings.length === 0 ? 'Nessun risultato' : `${listings.length} annunci`}
           </p>
         )}
@@ -224,7 +220,7 @@ export default function ListingsPage() {
           {loading ? (
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="skeleton h-28 rounded-2xl" />
+                <ShimmerSkeleton key={i} className="h-28 w-full" rounded="rounded-2xl" />
               ))}
             </motion.div>
           ) : listings.length === 0 ? (
@@ -235,8 +231,8 @@ export default function ListingsPage() {
               className="flex flex-col items-center py-16 gap-3 text-center"
             >
               <div className="text-5xl">🔍</div>
-              <p className="font-bold text-zinc-700 dark:text-zinc-300">Nessun annuncio trovato</p>
-              <p className="text-sm text-zinc-400 max-w-xs">
+              <p className="font-bold text-foreground/80">Nessun annuncio trovato</p>
+              <p className="text-sm text-muted max-w-xs">
                 {user ? 'Sii il primo a pubblicare un annuncio!' : 'Registrati e pubblica il tuo primo annuncio.'}
               </p>
               <Link href={user ? '/publish' : '/auth'}>
@@ -246,11 +242,13 @@ export default function ListingsPage() {
               </Link>
             </motion.div>
           ) : (
-            <motion.div key="list" className="space-y-3">
+            <StaggeredReveal key="list" className="space-y-3">
               {listings.map((listing, i) => (
-                <ListingCard key={listing.id} listing={listing} index={i} />
+                <StaggeredRevealItem key={listing.id}>
+                  <ListingCard listing={listing} index={i} />
+                </StaggeredRevealItem>
               ))}
-            </motion.div>
+            </StaggeredReveal>
           )}
         </AnimatePresence>
       </div>
