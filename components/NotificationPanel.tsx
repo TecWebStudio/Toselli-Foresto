@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import Link from 'next/link';
 import { getNotifications, markNotificationsRead } from '@/lib/api';
 import { ShimmerSkeleton } from '@/lib/animations';
+import { useAuth } from '@/lib/AuthContext';
 import type { Notification } from '@/lib/types';
 
 const typeIcons: Record<string, string> = {
@@ -30,6 +31,8 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function NotificationPanel() {
+  const { user } = useAuth();
+  const userId = user?.id ?? 1;
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -40,14 +43,14 @@ export default function NotificationPanel() {
     // Poll unread count every 30s
     const fetchCount = async () => {
       try {
-        const data = await getNotifications(1);
+        const data = await getNotifications(userId);
         setUnreadCount(data.unread_count);
       } catch {}
     };
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (!open) return;
@@ -65,7 +68,7 @@ export default function NotificationPanel() {
     setOpen(true);
     setLoading(true);
     try {
-      const data = await getNotifications(1);
+      const data = await getNotifications(userId);
       setNotifications(data.notifications);
       setUnreadCount(data.unread_count);
     } catch {
@@ -77,7 +80,7 @@ export default function NotificationPanel() {
 
   const handleMarkAllRead = async () => {
     try {
-      await markNotificationsRead(1);
+      await markNotificationsRead(userId);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
       setUnreadCount(0);
     } catch {}
@@ -86,7 +89,7 @@ export default function NotificationPanel() {
   const handleNotificationClick = async (n: Notification) => {
     if (!n.is_read) {
       try {
-        await markNotificationsRead(1, n.id);
+        await markNotificationsRead(userId, n.id);
         setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: 1 } : x));
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch {}
@@ -101,7 +104,7 @@ export default function NotificationPanel() {
         whileTap={{ scale: 0.9 }}
         onClick={handleOpen}
         aria-label="Notifiche"
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-surface-2 dark:hover:bg-surface-2"
+        className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${open ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400' : 'text-muted-foreground hover:bg-surface-2 dark:hover:bg-surface-2'}`}
       >
         <motion.div
           animate={unreadCount > 0 ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
@@ -127,18 +130,26 @@ export default function NotificationPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="absolute left-0 top-12 z-50 w-80 rounded-2xl border border-glass-border-subtle bg-glass-strong shadow-xl backdrop-blur-2xl lg:left-0 lg:right-auto"
+            className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-glass-border-subtle bg-glass-strong shadow-xl backdrop-blur-2xl"
           >
             <div className="flex items-center justify-between border-b border-glass-border-subtle px-4 py-3">
               <h3 className="font-bold text-foreground">Notifiche</h3>
-              {unreadCount > 0 && (
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                  >
+                    Segna tutte lette
+                  </button>
+                )}
                 <button
-                  onClick={handleMarkAllRead}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                  onClick={() => setOpen(false)}
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-2 transition-colors"
                 >
-                  Segna tutte come lette
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              )}
+              </div>
             </div>
             <div className="max-h-96 overflow-y-auto">
               {loading ? (

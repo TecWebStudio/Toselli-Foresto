@@ -1,19 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Outfit } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
 import { AuthProvider } from "@/lib/AuthContext";
+import SplashScreen from "@/components/SplashScreen";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -39,9 +44,10 @@ export default function RootLayout({
   return (
     <html lang="it" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-50 dark:bg-zinc-950`}
+        className={`${spaceGrotesk.variable} ${outfit.variable} antialiased bg-zinc-50 dark:bg-zinc-950`}
       >
         <AuthProvider>
+          <SplashScreen />
         {/* Ambient mesh gradient background */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-indigo-500/[0.04] rounded-full blur-[100px]" />
