@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
 import { AuthProvider } from "@/lib/AuthContext";
+import { LanguageProvider } from "@/lib/LanguageContext";
 import SplashScreen from "@/components/SplashScreen";
 
 const spaceGrotesk = Space_Grotesk({
@@ -47,6 +48,7 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} ${outfit.variable} antialiased bg-zinc-50 dark:bg-zinc-950`}
       >
         <AuthProvider>
+          <LanguageProvider>
           <SplashScreen />
         {/* Ambient mesh gradient background */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -69,6 +71,7 @@ export default function RootLayout({
           </div>
           <RightSidebar />
         </div>
+        </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

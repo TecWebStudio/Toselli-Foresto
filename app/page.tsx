@@ -11,6 +11,7 @@ import {
 import { getListings, getCourses, getStats, getPosts, createPost } from '@/lib/api';
 import type { Listing, Course, PlatformStats, Post } from '@/lib/types';
 import { useAuth } from '@/lib/AuthContext';
+import { useLanguage } from '@/lib/LanguageContext';
 import Link from 'next/link';
 import {
   Briefcase, BookOpen, MapPin, Plus,
@@ -18,32 +19,32 @@ import {
 } from 'lucide-react';
 
 // ─── Quick action tiles ────────────────────────────────────────
-const quickActions = [
+const quickActionDefs = [
   {
     href: '/listings',
     icon: <Briefcase className="w-5 h-5" />,
-    label: 'Trova lavoro',
+    labelKey: 'home.find_job' as const,
     gradient: 'from-blue-500 to-cyan-500',
     glow: 'rgba(59,130,246,0.25)',
   },
   {
     href: '/learn',
     icon: <BookOpen className="w-5 h-5" />,
-    label: 'Impara',
+    labelKey: 'home.learn' as const,
     gradient: 'from-indigo-500 to-purple-500',
     glow: 'rgba(99,102,241,0.25)',
   },
   {
     href: '/publish',
     icon: <Plus className="w-5 h-5" />,
-    label: 'Pubblica',
+    labelKey: 'home.publish' as const,
     gradient: 'from-purple-500 to-pink-500',
     glow: 'rgba(168,85,247,0.25)',
   },
   {
     href: '/map',
     icon: <MapPin className="w-5 h-5" />,
-    label: 'Mappa',
+    labelKey: 'home.map' as const,
     gradient: 'from-emerald-500 to-teal-500',
     glow: 'rgba(16,185,129,0.25)',
   },
@@ -83,22 +84,24 @@ function SectionHeader({
 
 export default function Home() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [greeting, setGreeting] = useState('');
+
+  const quickActions = quickActionDefs.map(a => ({ ...a, label: t(a.labelKey) }));
+
+  const greetingKey = (() => {
+    const h = new Date().getHours();
+    return h < 12 ? 'home.greeting_morning' : h < 18 ? 'home.greeting_afternoon' : 'home.greeting_evening';
+  })();
 
   const [postContent, setPostContent] = useState('');
   const [postTags, setPostTags] = useState('');
   const [posting, setPosting] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
-
-  useEffect(() => {
-    const h = new Date().getHours();
-    setGreeting(h < 12 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera');
-  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -148,7 +151,7 @@ export default function Home() {
               transition={{ delay: 0.1 }}
               className="text-sm font-semibold text-indigo-200"
             >
-              {greeting} {user ? `${user.display_name || user.username} 👋` : '👋'}
+              {t(greetingKey)} {user ? `${user.display_name || user.username} 👋` : '👋'}
             </motion.p>
             <motion.h2
               initial={{ opacity: 0, y: 18 }}
@@ -188,9 +191,9 @@ export default function Home() {
                 className="mt-5 grid grid-cols-3 gap-2.5"
               >
                 {[
-                  { value: stats.jobs,           label: 'Posizioni', icon: '💼' },
-                  { value: stats.courses,         label: 'Corsi',    icon: '📚' },
-                  { value: stats.badges_awarded,  label: 'Badge',    icon: '🏅' },
+                  { value: stats.jobs,           label: t('sidebar.positions'), icon: '💼' },
+                  { value: stats.courses,         label: t('sidebar.courses'),   icon: '📚' },
+                  { value: stats.badges_awarded,  label: t('sidebar.badges'),    icon: '🏅' },
                 ].map((stat, i) => (
                   <motion.div
                     key={stat.label}
@@ -264,7 +267,7 @@ export default function Home() {
                     {(user.display_name || 'U').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 rounded-xl bg-surface-2 px-4 py-2.5 text-left text-sm text-muted">
-                    Condividi qualcosa con la community IT...
+                    {t('home.share_placeholder')}
                   </div>
                 </button>
               ) : (
@@ -280,7 +283,7 @@ export default function Home() {
                       <textarea
                         value={postContent}
                         onChange={e => setPostContent(e.target.value)}
-                        placeholder="Condividi un'idea, un progetto, una risorsa..."
+                        placeholder={t('home.idea_placeholder')}
                         maxLength={2000}
                         rows={3}
                         autoFocus
@@ -289,7 +292,7 @@ export default function Home() {
                       <input
                         value={postTags}
                         onChange={e => setPostTags(e.target.value)}
-                        placeholder="Tag separati da virgola (es: react, typescript)"
+                        placeholder={t('home.post_tags')}
                         className="mt-2 w-full rounded-xl bg-surface-1 dark:bg-surface-2/50 border border-glass-border-subtle px-3 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent/50"
                       />
                     </div>
@@ -301,14 +304,14 @@ export default function Home() {
                         onClick={() => { setComposerOpen(false); setPostContent(''); setPostTags(''); }}
                         className="rounded-xl px-4 py-1.5 text-xs font-semibold text-muted hover:bg-surface-2 transition-colors"
                       >
-                        Annulla
+                        {t('home.cancel')}
                       </button>
                       <button
                         onClick={handleCreatePost}
                         disabled={!postContent.trim() || posting}
                         className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-1.5 text-xs font-bold text-white shadow-md shadow-indigo-500/25 disabled:opacity-40 transition-opacity"
                       >
-                        {posting ? 'Pubblicando…' : 'Pubblica'}
+                        {posting ? t('home.posting') : t('home.post_btn')}
                       </button>
                     </div>
                   </div>
@@ -323,8 +326,8 @@ export default function Home() {
               className="rounded-2xl border border-dashed border-glass-border p-4 text-center"
             >
               <p className="text-sm text-muted">
-                <Link href="/auth" className="font-semibold text-accent hover:underline">Accedi</Link>
-                {' '}per pubblicare un post nella community IT
+                <Link href="/auth" className="font-semibold text-accent hover:underline">{t('nav.login')}</Link>
+                {' '}{t('home.login_to_post')}
               </p>
             </motion.div>
           )}
@@ -333,7 +336,7 @@ export default function Home() {
         {/* ── Community Feed ────────────────────────────────────── */}
         {posts.length > 0 && (
           <section className="px-4 pb-5">
-            <SectionHeader gradient="from-indigo-500 to-purple-500" title="Community" />
+            <SectionHeader gradient="from-indigo-500 to-purple-500" title={t('home.community')} />
             <StaggeredReveal className="space-y-3">
               <AnimatePresence mode="popLayout">
                 {posts.map((post, i) => (
@@ -385,7 +388,7 @@ export default function Home() {
         {/* ── Latest Listings ── horizontal scroll ─────────────── */}
         <section className="pb-5">
           <div className="px-4">
-            <SectionHeader gradient="from-blue-500 to-cyan-500" title="Ultimi annunci" href="/listings" />
+            <SectionHeader gradient="from-blue-500 to-cyan-500" title={t('home.latest_listings')} href="/listings" hrefLabel={t('home.see_all')} />
           </div>
           {loading ? (
             <div className="flex gap-3 px-4 overflow-x-auto pb-2">
@@ -399,10 +402,10 @@ export default function Home() {
                 className="rounded-2xl border border-dashed border-glass-border p-6 text-center"
               >
                 <p className="text-2xl mb-2">📋</p>
-                <p className="text-sm font-semibold text-muted">Nessun annuncio ancora</p>
+                <p className="text-sm font-semibold text-muted">{t('home.no_listings')}</p>
                 <Link href="/publish">
                   <SpringButton className="mt-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-500/25">
-                    Pubblica
+                    {t('home.publish')}
                   </SpringButton>
                 </Link>
               </motion.div>
@@ -440,7 +443,7 @@ export default function Home() {
                         ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400'
                         : 'bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400'
                     }`}>
-                      {isOffer ? '💼 Offerta' : '🧑‍💻 Richiesta'}
+                      {isOffer ? t('home.job_offer_badge') : t('home.job_request_badge')}
                     </span>
                     <p className="mt-2 text-xs text-muted line-clamp-2">{listing.description}</p>
                     {listing.salary_min && listing.salary_max && (
@@ -457,7 +460,7 @@ export default function Home() {
 
         {/* ── Featured Courses ─────────────────────────────────── */}
         <section className="px-4 pb-5">
-          <SectionHeader gradient="from-purple-500 to-pink-500" title="Percorsi formativi" href="/learn" />
+          <SectionHeader gradient="from-purple-500 to-pink-500" title={t('home.learning_paths')} href="/learn" hrefLabel={t('home.see_all')} />
           {loading ? (
             <div className="grid grid-cols-2 gap-3">
               {[1, 2].map(i => <ShimmerSkeleton key={i} className="h-56 w-full" rounded="rounded-2xl" />)}
@@ -488,7 +491,7 @@ export default function Home() {
               >
                 <Lightbulb className="w-5 h-5 text-amber-600" />
               </motion.span>
-              <h3 className="font-black text-foreground text-sm">Consiglio del giorno</h3>
+              <h3 className="font-black text-foreground text-sm">{t('home.tip_of_day')}</h3>
             </div>
             <p className="text-sm text-muted leading-relaxed">
               Le aziende IT italiane nel 2026 cercano principalmente profili con competenze in{' '}
@@ -509,7 +512,7 @@ export default function Home() {
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
               <Flame className="w-4 h-4 text-emerald-500" />
-              <h3 className="text-base font-black text-foreground">Trending ora</h3>
+              <h3 className="text-base font-black text-foreground">{t('home.trending_now')}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               {trendingTech.map((tech, i) => (

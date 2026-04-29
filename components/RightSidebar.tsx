@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getStats, getListings, getCourses } from '@/lib/api';
 import type { PlatformStats, Listing, Course } from '@/lib/types';
 import { AnimatedCounter } from '@/lib/animations';
+import { useLanguage } from '@/lib/LanguageContext';
 
 const trendingTechs = [
   { name: 'React', color: '#61dafb', jobs: 47 },
@@ -16,6 +17,7 @@ const trendingTechs = [
 ];
 
 export default function RightSidebar() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -44,13 +46,13 @@ export default function RightSidebar() {
           transition={{ delay: 0.2 }}
           className="rounded-2xl border border-glass-border-subtle bg-surface-0/80 dark:bg-surface-1/80 backdrop-blur-sm p-4 shadow-xs"
         >
-          <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Piattaforma</h3>
+          <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">{t('sidebar.platform')}</h3>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Posizioni', value: stats.jobs, icon: '💼', color: 'from-blue-500/10 to-indigo-500/10' },
-              { label: 'Corsi', value: stats.courses, icon: '📚', color: 'from-purple-500/10 to-pink-500/10' },
-              { label: 'Utenti', value: stats.users, icon: '👥', color: 'from-emerald-500/10 to-teal-500/10' },
-              { label: 'Badge', value: stats.badges_awarded, icon: '🏅', color: 'from-amber-500/10 to-orange-500/10' },
+              { label: t('sidebar.positions'), value: stats.jobs, icon: '💼', color: 'from-blue-500/10 to-indigo-500/10' },
+              { label: t('sidebar.courses'),   value: stats.courses, icon: '📚', color: 'from-purple-500/10 to-pink-500/10' },
+              { label: t('sidebar.users'),     value: stats.users, icon: '👥', color: 'from-emerald-500/10 to-teal-500/10' },
+              { label: t('sidebar.badges'),    value: stats.badges_awarded, icon: '🏅', color: 'from-amber-500/10 to-orange-500/10' },
             ].map((item, i) => (
               <motion.div
                 key={item.label}
@@ -79,8 +81,8 @@ export default function RightSidebar() {
           className="rounded-2xl border border-glass-border-subtle bg-surface-0/80 dark:bg-surface-1/80 backdrop-blur-sm p-4 shadow-xs"
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Annunci recenti</h3>
-            <Link href="/listings" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">vedi tutti</Link>
+            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">{t('sidebar.recent_listings')}</h3>
+            <Link href="/listings" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{t('sidebar.see_all')}</Link>
           </div>
           <div className="space-y-3">
             {listings.map((listing, i) => (
@@ -115,7 +117,7 @@ export default function RightSidebar() {
         transition={{ delay: 0.4 }}
         className="rounded-2xl border border-glass-border-subtle bg-surface-0/80 dark:bg-surface-1/80 backdrop-blur-sm p-4 shadow-xs"
       >
-        <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Tech Trending</h3>
+        <h3 className="text-xs font-bold text-muted uppercase tracking-wider mb-3">{t('sidebar.trending_tech')}</h3>
         <div className="space-y-2">
           {trendingTechs.map((tech, i) => (
             <motion.div
@@ -130,7 +132,7 @@ export default function RightSidebar() {
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tech.color }} />
                 <span className="text-xs font-semibold text-foreground/80 group-hover:text-foreground transition-colors">{tech.name}</span>
               </div>
-              <span className="text-[10px] text-muted-foreground font-medium">{tech.jobs} job</span>
+              <span className="text-[10px] text-muted-foreground font-medium">{tech.jobs} {t('sidebar.jobs_label')}</span>
             </motion.div>
           ))}
         </div>
@@ -145,8 +147,8 @@ export default function RightSidebar() {
           className="rounded-2xl border border-glass-border-subtle bg-surface-0/80 dark:bg-surface-1/80 backdrop-blur-sm p-4 shadow-xs"
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">Corsi consigliati</h3>
-            <Link href="/learn" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">vedi tutti</Link>
+            <h3 className="text-xs font-bold text-muted uppercase tracking-wider">{t('sidebar.recommended_courses')}</h3>
+            <Link href="/learn" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{t('sidebar.see_all')}</Link>
           </div>
           <div className="space-y-3">
             {courses.map((course, i) => (
@@ -176,8 +178,8 @@ export default function RightSidebar() {
 
       {/* Footer */}
       <div className="text-[10px] text-muted-foreground px-1 pb-4">
-        <p>© 2026 DevHub IT · Tutti i diritti riservati</p>
-        <p className="mt-1">Piattaforma per professionisti IT italiani</p>
+        <p>{t('sidebar.copyright')}</p>
+        <p className="mt-1">{t('sidebar.platform_desc')}</p>
       </div>
     </aside>
   );

@@ -5,18 +5,20 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, LayoutGrid, Map, BookOpen, User } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-
-const navItems = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/listings', label: 'Bacheca', icon: LayoutGrid },
-  { href: '/map', label: 'Mappa', icon: Map },
-  { href: '/learn', label: 'Impara', icon: BookOpen },
-  { href: null as string | null, label: 'Account', icon: User },
-];
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { href: '/',         labelKey: 'nav.home',    icon: Home },
+    { href: '/listings', labelKey: 'nav.board',   icon: LayoutGrid },
+    { href: '/map',      labelKey: 'nav.map',     icon: Map },
+    { href: '/learn',    labelKey: 'nav.learn',   icon: BookOpen },
+    { href: null as string | null, labelKey: 'nav.account', icon: User },
+  ];
 
   const isActive = (href: string | null) => {
     if (!href) return pathname === '/profile' || pathname === '/auth';
@@ -41,7 +43,7 @@ export default function BottomNav() {
           const Icon = item.icon;
           return (
             <Link
-              key={item.label}
+              key={item.labelKey}
               href={href}
               className="relative flex flex-1 flex-col items-center gap-0.5 py-2 pt-2.5"
             >
@@ -70,7 +72,7 @@ export default function BottomNav() {
                   ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
                   : 'text-muted-foreground'
               }`}>
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </Link>
           );

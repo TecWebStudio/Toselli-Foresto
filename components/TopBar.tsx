@@ -4,13 +4,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { SlidersHorizontal, Code2 } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
-
-const pageTitles: Record<string, string> = {
-  '/': 'DevHub IT',
-  '/jobs': 'Opportunità',
-  '/learn': 'Formazione',
-  '/profile': 'Profilo',
-};
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface TopBarProps {
   onFilterToggle?: () => void;
@@ -19,12 +13,24 @@ interface TopBarProps {
 
 export default function TopBar({ onFilterToggle, showFilter }: TopBarProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const pageTitleKey: Record<string, string> = {
+    '/':          'page.home',
+    '/jobs':      'page.opportunities',
+    '/listings':  'page.board',
+    '/learn':     'page.training',
+    '/profile':   'page.profile',
+    '/settings':  'page.settings',
+    '/map':       'page.map',
+    '/publish':   'page.publish',
+  };
 
   const getTitle = () => {
-    if (pageTitles[pathname]) return pageTitles[pathname];
-    if (pathname.startsWith('/learn/')) return 'Corso';
-    if (pathname.startsWith('/jobs/')) return 'Dettaglio';
-    return 'DevHub IT';
+    if (pageTitleKey[pathname]) return t(pageTitleKey[pathname]);
+    if (pathname.startsWith('/learn/')) return t('page.course');
+    if (pathname.startsWith('/jobs/')) return t('page.detail');
+    return t('page.home');
   };
 
   return (

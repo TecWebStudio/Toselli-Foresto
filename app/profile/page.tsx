@@ -9,10 +9,13 @@ import BadgeCard from '@/components/BadgeCard';
 import { PageTransition, AnimatedCounter, AnimatedProgressBar, ShimmerSkeleton } from '@/lib/animations';
 import { getUserBadges, getUserProgress, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { useLanguage } from '@/lib/LanguageContext';
 import type { UserBadge, UserProgress, PlatformStats } from '@/lib/types';
+import { Settings } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user: authUser, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
@@ -69,6 +72,13 @@ export default function ProfilePage() {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 text-white text-center shadow-2xl shadow-indigo-500/25"
           >
+            {/* Settings gear */}
+            <Link
+              href="/settings"
+              className="absolute top-4 right-4 z-20 flex items-center justify-center h-8 w-8 rounded-full bg-white/15 hover:bg-white/30 transition-colors backdrop-blur-sm"
+            >
+              <Settings className="w-4 h-4 text-white" strokeWidth={1.75} />
+            </Link>
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-pink-500/20 rounded-full blur-2xl" />
@@ -125,9 +135,9 @@ export default function ProfilePage() {
                 className="mt-5 flex items-center justify-center gap-6"
               >
                 {[
-                  { value: badges.length, label: 'Badge', icon: '🏅' },
+                  { value: badges.length, label: t('profile.badges'), icon: '🏅' },
                   { value: quizzesCompleted, label: 'Quiz', icon: '📝' },
-                  { value: totalModulesCompleted, label: 'Moduli', icon: '📖' },
+                  { value: totalModulesCompleted, label: t('profile.modules_of'), icon: '📖' },
                 ].map((stat, i) => (
                   <motion.div
                     key={stat.label}
@@ -156,9 +166,9 @@ export default function ProfilePage() {
             className="flex rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800 relative"
           >
             {([
-              { key: 'badges' as const, label: 'Badge', icon: '🏅' },
-              { key: 'progress' as const, label: 'Progressi', icon: '📊' },
-              { key: 'stats' as const, label: 'Piattaforma', icon: '🌐' },
+              { key: 'badges' as const, label: t('profile.badges'), icon: '🏅' },
+              { key: 'progress' as const, label: t('profile.progress'), icon: '📊' },
+              { key: 'stats' as const, label: t('profile.platform'), icon: '🌐' },
             ]).map(tab => (
               <button
                 key={tab.key}
@@ -200,14 +210,14 @@ export default function ProfilePage() {
                   >
                     🎯
                   </motion.span>
-                  <h3 className="mt-3 font-bold text-zinc-900 dark:text-white">Nessun badge ancora</h3>
-                  <p className="mt-1 text-sm text-zinc-500">Completa i quiz dei corsi per guadagnare badge!</p>
+                  <h3 className="mt-3 font-bold text-zinc-900 dark:text-white">{t('profile.no_badges')}</h3>
+                  <p className="mt-1 text-sm text-zinc-500">{t('profile.no_badges_desc')}</p>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href="/learn"
                       className="mt-4 inline-block rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/25"
                     >
-                      Esplora i corsi ✨
+                      {t('profile.explore_courses')}
                     </Link>
                   </motion.div>
                 </div>
@@ -240,7 +250,7 @@ export default function ProfilePage() {
                   <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     <AnimatedCounter value={avgScore} />%
                   </div>
-                  <div className="text-xs text-zinc-500 mt-0.5 font-medium">Media quiz</div>
+                  <div className="text-xs text-zinc-500 mt-0.5 font-medium">{t('profile.avg_score')}</div>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -251,15 +261,15 @@ export default function ProfilePage() {
                   <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     <AnimatedCounter value={totalModulesCompleted} />
                   </div>
-                  <div className="text-xs text-zinc-500 mt-0.5 font-medium">Moduli completati</div>
+                  <div className="text-xs text-zinc-500 mt-0.5 font-medium">{t('profile.modules_completed')}</div>
                 </motion.div>
               </div>
 
               {progress.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-sm text-zinc-500">Nessun corso iniziato ancora</p>
+                  <p className="text-sm text-zinc-500">{t('profile.no_courses')}</p>
                   <Link href="/learn" className="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:underline">
-                    Inizia un corso →
+                    {t('profile.start_course')}
                   </Link>
                 </div>
               ) : (
@@ -288,7 +298,7 @@ export default function ProfilePage() {
                                 : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
                             }`}
                           >
-                            Quiz: {p.quiz_score}%
+                            {t('profile.quiz_score')} {p.quiz_score}%
                           </motion.span>
                         ) : null}
                       </div>
@@ -297,7 +307,7 @@ export default function ProfilePage() {
                         className="h-1.5"
                       />
                       <p className="mt-1.5 text-xs text-zinc-500 font-medium">
-                        {p.completed_modules?.length || 0}/{p.total_modules || '?'} moduli
+                        {p.completed_modules?.length || 0}/{p.total_modules || '?'} {t('profile.modules_of')}
                       </p>
                     </Link>
                   </motion.div>
@@ -316,14 +326,14 @@ export default function ProfilePage() {
             >
               <h3 className="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-2">
                 <span className="w-1 h-4 rounded-full bg-gradient-to-b from-indigo-500 to-purple-500" />
-                DevHub IT in numeri
+                {t('profile.platform_numbers')}
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: 'Posizioni attive', value: stats.total_jobs, icon: '💼', gradient: 'from-blue-50 to-cyan-50 border-blue-200/60 dark:from-blue-900/10 dark:to-cyan-900/10 dark:border-blue-800/30' },
-                  { label: 'Corsi disponibili', value: stats.total_courses, icon: '📚', gradient: 'from-purple-50 to-indigo-50 border-purple-200/60 dark:from-purple-900/10 dark:to-indigo-900/10 dark:border-purple-800/30' },
-                  { label: 'Quiz attivi', value: stats.total_quizzes, icon: '📝', gradient: 'from-orange-50 to-amber-50 border-orange-200/60 dark:from-orange-900/10 dark:to-amber-900/10 dark:border-orange-800/30' },
-                  { label: 'Utenti iscritti', value: stats.total_users, icon: '👥', gradient: 'from-emerald-50 to-teal-50 border-emerald-200/60 dark:from-emerald-900/10 dark:to-teal-900/10 dark:border-emerald-800/30' },
+                  { label: t('profile.active_positions'),  value: stats.total_jobs,    icon: '💼', gradient: 'from-blue-50 to-cyan-50 border-blue-200/60 dark:from-blue-900/10 dark:to-cyan-900/10 dark:border-blue-800/30' },
+                  { label: t('profile.available_courses'), value: stats.total_courses,  icon: '📚', gradient: 'from-purple-50 to-indigo-50 border-purple-200/60 dark:from-purple-900/10 dark:to-indigo-900/10 dark:border-purple-800/30' },
+                  { label: t('profile.active_quizzes'),   value: stats.total_quizzes,  icon: '📝', gradient: 'from-orange-50 to-amber-50 border-orange-200/60 dark:from-orange-900/10 dark:to-amber-900/10 dark:border-orange-800/30' },
+                  { label: t('profile.registered_users'), value: stats.total_users,    icon: '👥', gradient: 'from-emerald-50 to-teal-50 border-emerald-200/60 dark:from-emerald-900/10 dark:to-teal-900/10 dark:border-emerald-800/30' },
                 ].map((stat, i) => (
                   <motion.div
                     key={stat.label}

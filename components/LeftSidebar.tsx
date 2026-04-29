@@ -4,22 +4,24 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Home, LayoutGrid, Map, GraduationCap, Plus, LogOut, User, ChevronUp, Code2 } from 'lucide-react';
+import { Home, LayoutGrid, Map, GraduationCap, Plus, LogOut, User, Settings, Code2 } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useAuth } from '@/lib/AuthContext';
-
-const navItems = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/listings', label: 'Bacheca', icon: LayoutGrid },
-  { href: '/map', label: 'Mappa', icon: Map },
-  { href: '/learn', label: 'Formazione', icon: GraduationCap },
-];
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function LeftSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const navItems = [
+    { href: '/',         labelKey: 'nav.home',     icon: Home },
+    { href: '/listings', labelKey: 'nav.board',    icon: LayoutGrid },
+    { href: '/map',      labelKey: 'nav.map',      icon: Map },
+    { href: '/learn',    labelKey: 'nav.training', icon: GraduationCap },
+  ];
 
   const initials = user?.display_name
     ? user.display_name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -81,7 +83,7 @@ export default function LeftSidebar() {
                 )}
                 <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
                 <span className={`font-semibold text-sm xl:block hidden ${active ? 'font-bold' : ''}`}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
                 {active && (
                   <motion.div
@@ -99,7 +101,7 @@ export default function LeftSidebar() {
         <div className="relative">
           <div className="flex items-center gap-3.5 rounded-xl px-3 py-3 text-muted hover:bg-surface-2/70 hover:text-foreground transition-all">
             <NotificationPanel />
-            <span className="font-semibold text-sm xl:block hidden pointer-events-none">Notifiche</span>
+            <span className="font-semibold text-sm xl:block hidden pointer-events-none">{t('nav.notifications')}</span>
           </div>
         </div>
 
@@ -113,7 +115,7 @@ export default function LeftSidebar() {
             >
               <Plus className="w-6 h-6" strokeWidth={1.75} />
               <span className="font-bold text-sm xl:block hidden">
-                {user.role === 'company' ? 'Pubblica offerta' : 'Proponi servizio'}
+                {user.role === 'company' ? t('nav.publish_offer') : t('nav.propose_service')}
               </span>
             </motion.div>
           </Link>
@@ -173,13 +175,19 @@ export default function LeftSidebar() {
                       <Link href="/profile" onClick={() => setMenuOpen(false)}>
                         <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-surface-2 transition-colors cursor-pointer text-sm text-muted hover:text-foreground">
                           <User className="w-4 h-4" strokeWidth={1.75} />
-                          Il mio profilo
+                          {t('nav.my_profile')}
+                        </div>
+                      </Link>
+                      <Link href="/settings" onClick={() => setMenuOpen(false)}>
+                        <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-surface-2 transition-colors cursor-pointer text-sm text-muted hover:text-foreground">
+                          <Settings className="w-4 h-4" strokeWidth={1.75} />
+                          {t('nav.settings')}
                         </div>
                       </Link>
                       <Link href="/publish" onClick={() => setMenuOpen(false)}>
                         <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-surface-2 transition-colors cursor-pointer text-sm text-muted hover:text-foreground">
                           <Plus className="w-4 h-4" strokeWidth={1.75} />
-                          {user.role === 'company' ? 'Pubblica offerta' : 'Proponi servizio'}
+                          {user.role === 'company' ? t('nav.publish_offer') : t('nav.propose_service')}
                         </div>
                       </Link>
                       <button
@@ -187,7 +195,7 @@ export default function LeftSidebar() {
                         className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer text-sm text-red-600 dark:text-red-400"
                       >
                         <LogOut className="w-4 h-4" strokeWidth={1.75} />
-                        Esci
+                        {t('nav.logout')}
                       </button>
                     </div>
                   </motion.div>
@@ -206,8 +214,8 @@ export default function LeftSidebar() {
                 <LogOut className="w-5 h-5" strokeWidth={1.75} />
               </div>
               <div className="min-w-0 xl:block hidden">
-                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">Accedi</p>
-                <p className="text-xs text-zinc-500">o registrati</p>
+                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{t('nav.login')}</p>
+                <p className="text-xs text-zinc-500">{t('nav.or_register')}</p>
               </div>
             </motion.div>
           </Link>

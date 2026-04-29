@@ -61,6 +61,8 @@ export async function getSessionUser(): Promise<AuthUser | null> {
     region: (row.region as string) || '',
     country: (row.country as string) || 'Italia',
     created_at: row.created_at as string,
+    language: (row.language as string) || 'it',
+    is_private: (row.is_private as number) ?? 0,
   };
 }
 

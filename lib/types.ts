@@ -180,6 +180,19 @@ export interface AuthUser {
   region: string;
   country: string;
   created_at: string;
+  language: string;
+  is_private: number; // 0 = public, 1 = private
+}
+
+export interface FollowRequest {
+  id: number;
+  requester_id: number;
+  target_id: number;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  requester_username?: string;
+  requester_display_name?: string;
+  requester_avatar_color?: string;
 }
 
 export interface AuthSession {
