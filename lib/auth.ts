@@ -44,13 +44,16 @@ export async function getSessionUser(): Promise<AuthUser | null> {
   if (result.rows.length === 0) return null;
   const row = result.rows[0];
 
+  const avatarColor = (row.avatar_color as string) || '#6366f1';
   return {
     id: row.id as number,
     email: row.email as string,
     role: row.role as 'worker' | 'company',
     display_name: row.display_name as string,
     username: row.username as string,
-    avatar_color: (row.avatar_color as string) || '#6366f1',
+    avatar_color: avatarColor,
+    avatar_url: (row.avatar_url as string | null) ?? null,
+    theme_color: (row.theme_color as string) || avatarColor,
     title: (row.title as string) || '',
     bio: (row.bio as string) || '',
     company_name: row.company_name as string | null,

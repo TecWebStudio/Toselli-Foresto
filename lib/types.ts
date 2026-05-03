@@ -170,6 +170,8 @@ export interface AuthUser {
   display_name: string;
   username: string;
   avatar_color: string;
+  avatar_url: string | null;       // uploaded profile picture (base64 data URL or path)
+  theme_color: string;             // whole-app accent colour (defaults to avatar_color)
   title: string;
   bio: string;
   company_name: string | null;
@@ -182,6 +184,33 @@ export interface AuthUser {
   created_at: string;
   language: string;
   is_private: number; // 0 = public, 1 = private
+}
+
+export interface Comment {
+  id: number;
+  user_id: number;
+  post_id: number;
+  content: string;
+  created_at: string;
+  username?: string;
+  display_name?: string;
+  avatar_color?: string;
+  avatar_url?: string | null;
+}
+
+export interface SearchResult {
+  id: number;
+  username: string;
+  display_name: string;
+  avatar_color: string;
+  avatar_url: string | null;
+  theme_color: string;
+  title: string;
+  bio: string;
+  city: string;
+  region: string;
+  role: 'worker' | 'company';
+  company_name: string | null;
 }
 
 export interface FollowRequest {

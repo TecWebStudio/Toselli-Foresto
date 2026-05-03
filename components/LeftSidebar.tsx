@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Home, LayoutGrid, Map, GraduationCap, Plus, LogOut, User, Settings, Code2 } from 'lucide-react';
+import { Home, LayoutGrid, Map, GraduationCap, Plus, LogOut, User, Settings, Code2, Search } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -21,6 +21,7 @@ export default function LeftSidebar() {
     { href: '/listings', labelKey: 'nav.board',    icon: LayoutGrid },
     { href: '/map',      labelKey: 'nav.map',      icon: Map },
     { href: '/learn',    labelKey: 'nav.training', icon: GraduationCap },
+    { href: '/search',   labelKey: 'nav.search',   icon: Search },
   ];
 
   const initials = user?.display_name

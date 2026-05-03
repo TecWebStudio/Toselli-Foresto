@@ -12,7 +12,7 @@ import type { FollowRequest } from '@/lib/types';
 import {
   User, Lock, Globe, Bell, Palette, Shield,
   ChevronRight, Check, X, Eye, EyeOff,
-  AlertCircle, CheckCircle2, UserCheck, UserX, Clock,
+  AlertCircle, CheckCircle2, UserCheck, UserX, Clock, Camera, Upload,
 } from 'lucide-react';
 
 // ─── Colour Palette ────────────────────────────────────────────────────────
@@ -166,8 +166,13 @@ export default function SettingsPage() {
 
   // — Appearance state
   const [avatarColor, setAvatarColor] = useState('#6366f1');
+  const [themeColor, setThemeColor] = useState('#6366f1');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [appearanceLoading, setAppearanceLoading] = useState(false);
   const [appearanceFeedback, setAppearanceFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadFeedback, setUploadFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
   // — Language state (local copy of lang from context)
   const [language, setLanguage] = useState<LangCode>(lang);
@@ -205,6 +210,9 @@ export default function SettingsPage() {
     setCompanyName(user.company_name || '');
     setCompanyWebsite(user.company_website || '');
     setAvatarColor(user.avatar_color || '#6366f1');
+    setThemeColor(user.theme_color || user.avatar_color || '#6366f1');
+    setAvatarUrl(user.avatar_url ?? null);
+    setAvatarPreview(user.avatar_url ?? null);
     const userLang = (user.language || 'it') as LangCode;
     setLanguage(userLang);
     setIsPrivate(!!user.is_private);
@@ -266,7 +274,7 @@ export default function SettingsPage() {
   const saveAppearance = async () => {
     setAppearanceLoading(true);
     setAppearanceFeedback(null);
-    const data = await patchSettings({ avatar_color: avatarColor });
+    const data = await patchSettings({ avatar_color: avatarColor, theme_color: themeColor });
     setAppearanceLoading(false);
     if (data.success) {
       setAppearanceFeedback({ type: 'success', msg: t('settings.save') + ' ✓' });
@@ -275,6 +283,38 @@ export default function SettingsPage() {
       setAppearanceFeedback({ type: 'error', msg: data.error || t('common.error') });
     }
     clearFeedback(setAppearanceFeedback);
+  };
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) {
+      setUploadFeedback({ type: 'error', msg: 'Immagine troppo grande (max 500 KB)' });
+      clearFeedback(setUploadFeedback);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setAvatarPreview(dataUrl);
+      setAvatarUrl(dataUrl);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const saveAvatarUpload = async () => {
+    if (!avatarUrl) return;
+    setUploadLoading(true);
+    setUploadFeedback(null);
+    const data = await patchSettings({ avatar_url: avatarUrl });
+    setUploadLoading(false);
+    if (data.success) {
+      setUploadFeedback({ type: 'success', msg: 'Foto profilo aggiornata ✓' });
+      await refresh();
+    } else {
+      setUploadFeedback({ type: 'error', msg: data.error || t('common.error') });
+    }
+    clearFeedback(setUploadFeedback);
   };
 
   // Language save: update context immediately → save to DB → reload page
@@ -416,12 +456,16 @@ export default function SettingsPage() {
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-pink-500/20 rounded-full blur-2xl" />
-            <div className="relative z-10 flex items-center gap-4">
+              <div className="relative z-10 flex items-center gap-4">
               <div
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-black border-2 border-white/25 shadow-xl"
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-white/25 shadow-xl overflow-hidden"
                 style={{ background: `${avatarColor}55` }}
               >
-                {initials}
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-black text-white">{initials}</span>
+                )}
               </div>
               <div>
                 <h1 className="text-xl font-black">{user.display_name}</h1>
@@ -480,60 +524,117 @@ export default function SettingsPage() {
           <SectionCard
             icon={Palette}
             title={t('settings.appearance_section')}
-            subtitle={t('settings.appearance_subtitle')}
+            subtitle="Colore tema e avatar dell'interfaccia"
             index={1}
           >
-            <div className="space-y-3">
-              <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
-                {t('settings.avatar_color')}
-              </label>
-              {/* Preview */}
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-black text-white shadow-lg transition-all duration-300"
-                  style={{ background: avatarColor }}
-                >
-                  {initials}
+            <div className="space-y-5">
+              {/* Theme colour (controls global UI accent) */}
+              <div className="space-y-3">
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
+                  Colore tema (interfaccia)
+                </label>
+                {/* Live preview strip */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-10 w-20 rounded-xl shadow-lg transition-all duration-300 border border-white/20"
+                    style={{ background: `linear-gradient(135deg, ${themeColor}, ${avatarColor})` }}
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                      {AVATAR_COLORS.find((c) => c.hex === themeColor)?.label ?? 'Personalizzato'}
+                    </p>
+                    <p className="text-xs text-zinc-400 font-mono">{themeColor}</p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5">Applicato a bottoni, link e accenti UI</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{t('settings.preview')}</p>
-                  <p className="text-xs text-zinc-500">{AVATAR_COLORS.find((c) => c.hex === avatarColor)?.label ?? t('settings.custom_color')}</p>
-                  <p className="text-xs text-zinc-400 font-mono">{avatarColor}</p>
+                {/* Swatches — selecting one updates BOTH themeColor and avatarColor */}
+                <div className="grid grid-cols-6 gap-2">
+                  {AVATAR_COLORS.map((c) => (
+                    <motion.button
+                      key={c.hex}
+                      whileHover={{ scale: 1.12 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => { setThemeColor(c.hex); setAvatarColor(c.hex); }}
+                      title={c.label}
+                      className={`relative h-10 w-full rounded-xl transition-all duration-200 ${
+                        themeColor === c.hex ? 'ring-2 ring-offset-2 ring-zinc-900/30 dark:ring-white/40 scale-110' : ''
+                      }`}
+                      style={{ background: c.hex }}
+                    >
+                      {themeColor === c.hex && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white drop-shadow" strokeWidth={3} />
+                        </span>
+                      )}
+                    </motion.button>
+                  ))}
                 </div>
-              </div>
-              {/* Swatches */}
-              <div className="grid grid-cols-6 gap-2">
-                {AVATAR_COLORS.map((c) => (
-                  <motion.button
-                    key={c.hex}
-                    whileHover={{ scale: 1.12 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setAvatarColor(c.hex)}
-                    title={c.label}
-                    className={`relative h-10 w-full rounded-xl transition-all duration-200 ${
-                      avatarColor === c.hex ? 'ring-2 ring-offset-2 ring-zinc-900/30 dark:ring-white/40 scale-110' : ''
-                    }`}
-                    style={{ background: c.hex }}
-                  >
-                    {avatarColor === c.hex && (
-                      <span className="absolute inset-0 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-white drop-shadow" strokeWidth={3} />
-                      </span>
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-              {/* Custom hex */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="color" value={avatarColor} onChange={(e) => setAvatarColor(e.target.value)}
-                  className="h-10 w-10 cursor-pointer rounded-lg border border-zinc-200 dark:border-zinc-700 bg-transparent p-1"
-                />
-                <span className="text-xs text-zinc-500">{t('settings.custom_color')}</span>
+                {/* Custom hex */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={themeColor}
+                    onChange={(e) => { setThemeColor(e.target.value); setAvatarColor(e.target.value); }}
+                    className="h-10 w-10 cursor-pointer rounded-lg border border-zinc-200 dark:border-zinc-700 bg-transparent p-1"
+                  />
+                  <span className="text-xs text-zinc-500">{t('settings.custom_color')}</span>
+                </div>
               </div>
             </div>
             <AnimatePresence>{appearanceFeedback && <Feedback type={appearanceFeedback.type} message={appearanceFeedback.msg} />}</AnimatePresence>
             <SaveButton onClick={saveAppearance} loading={appearanceLoading} />
+          </SectionCard>
+
+          {/* ── 2b. Foto Profilo ── */}
+          <SectionCard
+            icon={Camera}
+            title="Foto Profilo"
+            subtitle="Carica un'immagine (max 500 KB)"
+            index={2}
+          >
+            <div className="flex items-center gap-4">
+              {/* Avatar preview */}
+              <div className="relative shrink-0">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="h-20 w-20 rounded-2xl object-cover border-2 border-zinc-200 dark:border-zinc-700 shadow-md"
+                  />
+                ) : (
+                  <div
+                    className="flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-black text-white border-2 border-white/20 shadow-md"
+                    style={{ background: avatarColor }}
+                  >
+                    {initials}
+                  </div>
+                )}
+                {avatarPreview && (
+                  <button
+                    onClick={() => { setAvatarPreview(null); setAvatarUrl(null); }}
+                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
+              {/* Upload area */}
+              <div className="flex-1 space-y-2">
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-600 px-4 py-3 hover:border-indigo-400 transition-colors">
+                  <Upload className="w-4 h-4 text-zinc-400" />
+                  <span className="text-sm text-zinc-500">Scegli immagine…</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleAvatarFileChange}
+                  />
+                </label>
+                <p className="text-xs text-zinc-400">PNG, JPG, WEBP — max 500 KB</p>
+              </div>
+            </div>
+            <AnimatePresence>{uploadFeedback && <Feedback type={uploadFeedback.type} message={uploadFeedback.msg} />}</AnimatePresence>
+            <SaveButton onClick={saveAvatarUpload} loading={uploadLoading} disabled={!avatarUrl || avatarUrl === user?.avatar_url} />
           </SectionCard>
 
           {/* ── 3. Lingua ── */}
@@ -541,7 +642,7 @@ export default function SettingsPage() {
             icon={Globe}
             title={t('settings.language_section')}
             subtitle={t('settings.language_subtitle')}
-            index={2}
+            index={3}
           >
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {LANGUAGES.map((langItem) => (
@@ -573,7 +674,7 @@ export default function SettingsPage() {
             icon={Shield}
             title={t('settings.privacy_section')}
             subtitle={t('settings.privacy_subtitle')}
-            index={3}
+            index={4}
           >
             {/* Toggle */}
             <div className="flex items-center justify-between gap-4 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
@@ -733,7 +834,7 @@ export default function SettingsPage() {
             icon={Lock}
             title={t('settings.security_section')}
             subtitle={t('settings.security_subtitle')}
-            index={4}
+            index={5}
           >
             <PasswordField label={t('settings.current_password')} value={currentPw} onChange={setCurrentPw} placeholder="••••••••" />
             <PasswordField label={t('settings.new_password')} value={newPw} onChange={setNewPw} placeholder="Min 6 chars" />
@@ -768,7 +869,7 @@ export default function SettingsPage() {
             icon={Bell}
             title={t('settings.preferences_section')}
             subtitle={t('settings.preferences_subtitle')}
-            index={5}
+            index={6}
           >
             <div className="space-y-3">
               {[

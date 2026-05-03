@@ -24,12 +24,14 @@ export default function TopBar({ onFilterToggle, showFilter }: TopBarProps) {
     '/settings':  'page.settings',
     '/map':       'page.map',
     '/publish':   'page.publish',
+    '/search':    'page.search',
   };
 
   const getTitle = () => {
     if (pageTitleKey[pathname]) return t(pageTitleKey[pathname]);
     if (pathname.startsWith('/learn/')) return t('page.course');
     if (pathname.startsWith('/jobs/')) return t('page.detail');
+    if (pathname.startsWith('/profile/')) return t('page.profile_user');
     return t('page.home');
   };
 

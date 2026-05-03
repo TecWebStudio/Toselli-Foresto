@@ -17,6 +17,8 @@ export async function PATCH(request: Request) {
       bio,
       title,
       avatar_color,
+      avatar_url,
+      theme_color,
       language,
       is_private,
       company_name,
@@ -56,6 +58,8 @@ export async function PATCH(request: Request) {
     if (bio !== undefined) { updates.push('bio = ?'); args.push(bio); }
     if (title !== undefined) { updates.push('title = ?'); args.push(title); }
     if (avatar_color !== undefined) { updates.push('avatar_color = ?'); args.push(avatar_color); }
+    if (avatar_url !== undefined) { updates.push('avatar_url = ?'); args.push(avatar_url ?? null); }
+    if (theme_color !== undefined) { updates.push('theme_color = ?'); args.push(theme_color); }
     if (language !== undefined) { updates.push('language = ?'); args.push(language); }
     if (is_private !== undefined) { updates.push('is_private = ?'); args.push(is_private ? 1 : 0); }
     if (company_name !== undefined) { updates.push('company_name = ?'); args.push(company_name || null); }
@@ -87,6 +91,8 @@ export async function PATCH(request: Request) {
         display_name: row.display_name,
         username: row.username,
         avatar_color: row.avatar_color,
+        avatar_url: row.avatar_url ?? null,
+        theme_color: (row.theme_color as string) || (row.avatar_color as string) || '#6366f1',
         title: row.title,
         bio: row.bio,
         company_name: row.company_name,

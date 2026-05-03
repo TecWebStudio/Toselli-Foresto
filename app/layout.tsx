@@ -7,6 +7,7 @@ import RightSidebar from "@/components/RightSidebar";
 import { AuthProvider } from "@/lib/AuthContext";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import SplashScreen from "@/components/SplashScreen";
+import ThemeApplier from "@/components/ThemeApplier";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -48,6 +49,7 @@ export default function RootLayout({
         className={`${spaceGrotesk.variable} ${outfit.variable} antialiased bg-zinc-50 dark:bg-zinc-950`}
       >
         <AuthProvider>
+          <ThemeApplier />
           <LanguageProvider>
           <SplashScreen />
         {/* Ambient mesh gradient background */}

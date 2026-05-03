@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TopBar from '@/components/TopBar';
 import CourseCard from '@/components/CourseCard';
@@ -8,14 +8,15 @@ import {
   AnimatedCounter, FloatingParticles, PageTransition,
   ShimmerSkeleton, StaggeredReveal, StaggeredRevealItem, SpringButton,
 } from '@/lib/animations';
-import { getListings, getCourses, getStats, getPosts, createPost } from '@/lib/api';
-import type { Listing, Course, PlatformStats, Post } from '@/lib/types';
+import { getListings, getCourses, getStats, getPosts, createPost, likePost, unlikePost, getComments, createComment } from '@/lib/api';
+import type { Listing, Course, PlatformStats, Post, Comment } from '@/lib/types';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 import Link from 'next/link';
 import {
   Briefcase, BookOpen, MapPin, Plus,
   ArrowRight, Flame, Lightbulb,
+  Heart, MessageCircle, ImageIcon, X, Send,
 } from 'lucide-react';
 
 // ─── Quick action tiles ────────────────────────────────────────
@@ -82,6 +83,255 @@ function SectionHeader({
   );
 }
 
+// ─── Post card with like + comment ───────────────────────────
+interface PostCardProps {
+  post: Post;
+  currentUserId: number | null;
+  currentUserAvatarColor: string;
+  currentUserAvatarUrl: string | null;
+  currentUserInitial: string;
+}
+
+function PostCard({ post, currentUserId, currentUserAvatarColor, currentUserAvatarUrl, currentUserInitial }: PostCardProps) {
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [likeAnimating, setLikeAnimating] = useState(false);
+
+  // Check initial like state
+  useEffect(() => {
+    if (!currentUserId) return;
+    fetch(`/api/posts/${post.id}/like`)
+      .then(r => r.json())
+      .then(d => setLiked(d.liked ?? false))
+      .catch(() => {});
+  }, [post.id, currentUserId]);
+
+  const handleLike = async () => {
+    if (!currentUserId) return;
+    setLikeAnimating(true);
+    setTimeout(() => setLikeAnimating(false), 400);
+    // Optimistic update
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikesCount(c => wasLiked ? Math.max(0, c - 1) : c + 1);
+    try {
+      const fn = wasLiked ? unlikePost : likePost;
+      const result = await fn(post.id);
+      setLikesCount(result.likes_count);
+      setLiked(result.liked);
+    } catch {
+      // Revert on error
+      setLiked(wasLiked);
+      setLikesCount(c => wasLiked ? c + 1 : Math.max(0, c - 1));
+    }
+  };
+
+  const loadComments = async () => {
+    setCommentsLoading(true);
+    try {
+      const { comments: loaded } = await getComments(post.id);
+      setComments(loaded);
+    } catch { /* silent */ } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleToggleComments = () => {
+    const next = !showComments;
+    setShowComments(next);
+    if (next && comments.length === 0) loadComments();
+  };
+
+  const handleSubmitComment = async () => {
+    if (!commentText.trim() || submittingComment || !currentUserId) return;
+    setSubmittingComment(true);
+    try {
+      const result = await createComment(post.id, commentText.trim());
+      setCommentText('');
+      setCommentsCount(result.comments_count);
+      await loadComments();
+    } catch { /* silent */ } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const postInitial = (post.display_name || post.username || 'U').charAt(0).toUpperCase();
+
+  return (
+    <div className="rounded-2xl border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 overflow-hidden shadow-xs hover:shadow-md transition-shadow duration-300">
+      {/* Post header */}
+      <div className="flex items-center gap-3 p-4 pb-2.5">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white overflow-hidden"
+          style={{ background: post.avatar_color || '#6366f1' }}
+        >
+          {postInitial}
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground">{post.display_name || post.username}</p>
+          <p className="text-[10px] text-muted-foreground">
+            @{post.username} · {new Date(post.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+          </p>
+        </div>
+      </div>
+
+      {/* Post body */}
+      <div className="px-4 pb-3">
+        <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{post.content}</p>
+        {post.image_url && (
+          <div className="mt-3 overflow-hidden rounded-xl border border-glass-border-subtle">
+            <img src={post.image_url} alt="post image" className="w-full object-cover max-h-72" />
+          </div>
+        )}
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
+            {post.tags.map(tag => (
+              <span key={tag} className="rounded-full bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Action bar */}
+      <div className="flex items-center gap-1 px-3 pb-3 border-t border-glass-border-subtle pt-2.5">
+        {/* Like */}
+        <motion.button
+          whileTap={{ scale: 0.85 }}
+          onClick={handleLike}
+          disabled={!currentUserId}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40 ${
+            liked
+              ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30'
+              : 'text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20'
+          }`}
+        >
+          <motion.span
+            animate={likeAnimating ? { scale: [1, 1.5, 1] } : {}}
+            transition={{ duration: 0.35 }}
+            className="inline-flex"
+          >
+            <Heart
+              className="w-4 h-4"
+              strokeWidth={liked ? 0 : 1.75}
+              fill={liked ? 'currentColor' : 'none'}
+            />
+          </motion.span>
+          <span>{likesCount}</span>
+        </motion.button>
+
+        {/* Comment */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={handleToggleComments}
+          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors ${
+            showComments
+              ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30'
+              : 'text-muted-foreground hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20'
+          }`}
+        >
+          <MessageCircle className="w-4 h-4" strokeWidth={showComments ? 2 : 1.75} />
+          <span>{commentsCount}</span>
+        </motion.button>
+      </div>
+
+      {/* Comment thread */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden border-t border-glass-border-subtle"
+          >
+            <div className="px-4 pt-3 pb-4 space-y-3">
+              {/* Comments list */}
+              {commentsLoading ? (
+                <div className="flex justify-center py-3">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full"
+                  />
+                </div>
+              ) : comments.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-2">
+                  Nessun commento ancora
+                </p>
+              ) : (
+                <div className="space-y-2.5">
+                  {comments.map(comment => {
+                    const cInitial = (comment.display_name || comment.username || 'U').charAt(0).toUpperCase();
+                    return (
+                      <div key={comment.id} className="flex gap-2.5">
+                        <div
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white mt-0.5"
+                          style={{ background: comment.avatar_color || '#6366f1' }}
+                        >
+                          {cInitial}
+                        </div>
+                        <div className="flex-1 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2">
+                          <p className="text-[11px] font-bold text-foreground">
+                            {comment.display_name || comment.username}
+                          </p>
+                          <p className="text-xs text-foreground/70 mt-0.5 leading-relaxed">
+                            {comment.content}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* New comment input */}
+              {currentUserId && (
+                <div className="flex gap-2 items-center">
+                  <div
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white overflow-hidden"
+                    style={{ background: currentUserAvatarColor }}
+                  >
+                    {currentUserAvatarUrl ? (
+                      <img src={currentUserAvatarUrl} alt="me" className="h-full w-full object-cover" />
+                    ) : currentUserInitial}
+                  </div>
+                  <div className="flex-1 flex items-center gap-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-glass-border-subtle px-3 py-1.5">
+                    <input
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmitComment(); } }}
+                      placeholder="Scrivi un commento…"
+                      maxLength={500}
+                      className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted focus:outline-none"
+                    />
+                    <motion.button
+                      whileTap={{ scale: 0.88 }}
+                      onClick={handleSubmitComment}
+                      disabled={!commentText.trim() || submittingComment}
+                      className="text-indigo-600 dark:text-indigo-400 disabled:opacity-40 shrink-0"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </motion.button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Main home page ───────────────────────────────────────────
 export default function Home() {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -100,8 +350,10 @@ export default function Home() {
 
   const [postContent, setPostContent] = useState('');
   const [postTags, setPostTags] = useState('');
+  const [postImage, setPostImage] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     Promise.all([
@@ -118,20 +370,42 @@ export default function Home() {
     });
   }, []);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Immagine troppo grande (max 2 MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => setPostImage(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleCreatePost = useCallback(async () => {
     if (!postContent.trim() || posting) return;
     setPosting(true);
     try {
       const tags = postTags.split(',').map(t => t.trim()).filter(Boolean);
-      await createPost({ content: postContent.trim(), tags, post_type: 'text' });
+      await createPost({
+        content: postContent.trim(),
+        tags,
+        post_type: 'text',
+        ...(postImage ? { image_url: postImage } : {}),
+      });
       setPostContent('');
       setPostTags('');
+      setPostImage(null);
       setComposerOpen(false);
       setPosts(await getPosts().catch(() => []));
     } catch { /* silent */ } finally {
       setPosting(false);
     }
-  }, [postContent, postTags, posting]);
+  }, [postContent, postTags, postImage, posting]);
+
+  const userInitial = (user?.display_name || 'U').charAt(0).toUpperCase();
+  const userAvatarColor = user?.avatar_color || '#6366f1';
+  const userAvatarUrl = user?.avatar_url ?? null;
 
   return (
     <>
@@ -261,10 +535,12 @@ export default function Home() {
                   className="flex w-full items-center gap-3"
                 >
                   <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white"
-                    style={{ background: user.avatar_color || '#6366f1' }}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white overflow-hidden"
+                    style={{ background: userAvatarColor }}
                   >
-                    {(user.display_name || 'U').charAt(0).toUpperCase()}
+                    {userAvatarUrl ? (
+                      <img src={userAvatarUrl} alt="me" className="h-full w-full object-cover" />
+                    ) : userInitial}
                   </div>
                   <div className="flex-1 rounded-xl bg-surface-2 px-4 py-2.5 text-left text-sm text-muted">
                     {t('home.share_placeholder')}
@@ -274,10 +550,12 @@ export default function Home() {
                 <div>
                   <div className="flex items-start gap-3">
                     <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white mt-1"
-                      style={{ background: user.avatar_color || '#6366f1' }}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white mt-1 overflow-hidden"
+                      style={{ background: userAvatarColor }}
                     >
-                      {(user.display_name || 'U').charAt(0).toUpperCase()}
+                      {userAvatarUrl ? (
+                        <img src={userAvatarUrl} alt="me" className="h-full w-full object-cover" />
+                      ) : userInitial}
                     </div>
                     <div className="flex-1">
                       <textarea
@@ -295,13 +573,47 @@ export default function Home() {
                         placeholder={t('home.post_tags')}
                         className="mt-2 w-full rounded-xl bg-surface-1 dark:bg-surface-2/50 border border-glass-border-subtle px-3 py-2 text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-accent/50"
                       />
+
+                      {/* Image preview */}
+                      <AnimatePresence>
+                        {postImage && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="relative mt-2 overflow-hidden rounded-xl border border-glass-border-subtle"
+                          >
+                            <img src={postImage} alt="preview" className="w-full max-h-56 object-cover" />
+                            <button
+                              onClick={() => { setPostImage(null); if (imageInputRef.current) imageInputRef.current.value = ''; }}
+                              className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-3 pl-12">
-                    <span className="text-xs text-muted-foreground">{postContent.length}/2000</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{postContent.length}/2000</span>
+                      {/* Image attachment */}
+                      <label className="flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors">
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>Foto</span>
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="sr-only"
+                          onChange={handleImageSelect}
+                        />
+                      </label>
+                    </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setComposerOpen(false); setPostContent(''); setPostTags(''); }}
+                        onClick={() => { setComposerOpen(false); setPostContent(''); setPostTags(''); setPostImage(null); }}
                         className="rounded-xl px-4 py-1.5 text-xs font-semibold text-muted hover:bg-surface-2 transition-colors"
                       >
                         {t('home.cancel')}
@@ -347,36 +659,14 @@ export default function Home() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.3, delay: i * 0.04 }}
                       layout
-                      className="rounded-2xl border border-glass-border-subtle bg-surface-0 dark:bg-surface-1 p-4 shadow-xs hover:shadow-md transition-shadow duration-300"
                     >
-                      <div className="flex items-center gap-3 mb-2.5">
-                        <div
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white"
-                          style={{ background: post.avatar_color || '#6366f1' }}
-                        >
-                          {(post.display_name || post.username || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-foreground">{post.display_name || post.username}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            @{post.username} · {new Date(post.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{post.content}</p>
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-2.5">
-                          {post.tags.map(tag => (
-                            <span key={tag} className="rounded-full bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-glass-border-subtle">
-                        <span className="text-xs text-muted-foreground">❤️ {post.likes_count}</span>
-                        <span className="text-xs text-muted-foreground">💬 {post.comments_count}</span>
-                      </div>
+                      <PostCard
+                        post={post}
+                        currentUserId={user?.id ?? null}
+                        currentUserAvatarColor={userAvatarColor}
+                        currentUserAvatarUrl={userAvatarUrl}
+                        currentUserInitial={userInitial}
+                      />
                     </motion.div>
                   </StaggeredRevealItem>
                 ))}

@@ -12,6 +12,7 @@ const translations: Record<string, Record<LangCode, string>> = {
   'nav.map':            { it: 'Mappa',      en: 'Map',          es: 'Mapa',         fr: 'Carte',       de: 'Karte',        pt: 'Mapa' },
   'nav.learn':          { it: 'Impara',     en: 'Learn',        es: 'Aprender',     fr: 'Apprendre',   de: 'Lernen',       pt: 'Aprender' },
   'nav.training':       { it: 'Formazione', en: 'Training',     es: 'Formación',    fr: 'Formation',   de: 'Schulung',     pt: 'Formação' },
+  'nav.search':         { it: 'Cerca',      en: 'Search',       es: 'Buscar',       fr: 'Recherche',   de: 'Suchen',       pt: 'Pesquisar' },
   'nav.account':        { it: 'Account',    en: 'Account',      es: 'Cuenta',       fr: 'Compte',      de: 'Konto',        pt: 'Conta' },
   'nav.settings':       { it: 'Impostazioni', en: 'Settings',   es: 'Ajustes',      fr: 'Paramètres',  de: 'Einstellungen', pt: 'Configurações' },
   'nav.notifications':  { it: 'Notifiche',  en: 'Notifications', es: 'Notificaciones', fr: 'Notifications', de: 'Benachrichtigungen', pt: 'Notificações' },
@@ -33,6 +34,8 @@ const translations: Record<string, Record<LangCode, string>> = {
   'page.map':           { it: 'Mappa',      en: 'Map',          es: 'Mapa',         fr: 'Carte',       de: 'Karte',        pt: 'Mapa' },
   'page.publish':       { it: 'Pubblica',   en: 'Publish',      es: 'Publicar',     fr: 'Publier',     de: 'Veröffentlichen', pt: 'Publicar' },
   'page.board':         { it: 'Bacheca',    en: 'Board',        es: 'Tablero',      fr: 'Tableau',     de: 'Pinnwand',     pt: 'Quadro' },
+  'page.search':        { it: 'Cerca persone', en: 'Search people', es: 'Buscar personas', fr: 'Rechercher', de: 'Personen suchen', pt: 'Pesquisar pessoas' },
+  'page.profile_user':  { it: 'Profilo',       en: 'Profile',       es: 'Perfil',          fr: 'Profil',       de: 'Profil',          pt: 'Perfil' },
 
   // ── Home page ─────────────────────────────────────────────────────────────
   'home.greeting_morning':   { it: 'Buongiorno',     en: 'Good morning',   es: 'Buenos días',   fr: 'Bonjour',         de: 'Guten Morgen',   pt: 'Bom dia' },
@@ -99,6 +102,22 @@ const translations: Record<string, Record<LangCode, string>> = {
   'profile.registered_users':   { it: 'Utenti iscritti',   en: 'Registered users',  es: 'Usuarios registrados', fr: 'Utilisateurs inscrits', de: 'Registrierte Nutzer', pt: 'Utilizadores registados' },
   'profile.quiz_score':         { it: 'Quiz:',             en: 'Quiz:',             es: 'Quiz:',           fr: 'Quiz:',          de: 'Quiz:',           pt: 'Quiz:' },
   'profile.modules_of':         { it: 'moduli',            en: 'modules',           es: 'módulos',         fr: 'modules',        de: 'Module',          pt: 'módulos' },
+
+  // ── Public profile page ───────────────────────────────────────────────────
+  'profile.follow':             { it: 'Segui',             en: 'Follow',            es: 'Seguir',          fr: 'Suivre',         de: 'Folgen',          pt: 'Seguir' },
+  'profile.following':          { it: 'Stai seguendo',     en: 'Following',         es: 'Siguiendo',       fr: 'Abonné',         de: 'Folgst du',       pt: 'Seguindo' },
+  'profile.unfollow':           { it: 'Smetti di seguire', en: 'Unfollow',          es: 'Dejar de seguir', fr: 'Ne plus suivre', de: 'Entfolgen',       pt: 'Deixar de seguir' },
+  'profile.pending':            { it: 'In attesa',         en: 'Pending',           es: 'Pendiente',       fr: 'En attente',     de: 'Ausstehend',      pt: 'Pendente' },
+  'profile.posts':              { it: 'Post',              en: 'Posts',             es: 'Publicaciones',   fr: 'Posts',          de: 'Beiträge',        pt: 'Posts' },
+  'profile.followers':          { it: 'Follower',          en: 'Followers',         es: 'Seguidores',      fr: 'Abonnés',        de: 'Follower',        pt: 'Seguidores' },
+  'profile.following_count':    { it: 'Seguiti',           en: 'Following',         es: 'Siguiendo',       fr: 'Abonnements',    de: 'Gefolgt',         pt: 'A seguir' },
+  'profile.private_profile':    { it: 'Profilo privato',   en: 'Private profile',   es: 'Perfil privado',  fr: 'Profil privé',   de: 'Privates Profil', pt: 'Perfil privado' },
+  'profile.private_desc':       { it: 'Segui questo utente per vedere i suoi post', en: 'Follow this user to see their posts', es: 'Sigue a este usuario para ver sus posts', fr: 'Suivez cet utilisateur pour voir ses posts', de: 'Folge diesem Nutzer um seine Beiträge zu sehen', pt: 'Segue este utilizador para ver os seus posts' },
+  'profile.no_posts':           { it: 'Nessun post ancora', en: 'No posts yet',     es: 'Sin publicaciones aún', fr: 'Pas encore de posts', de: 'Noch keine Beiträge', pt: 'Nenhum post ainda' },
+  'profile.developer':          { it: 'Developer',         en: 'Developer',         es: 'Developer',       fr: 'Développeur',    de: 'Entwickler',      pt: 'Developer' },
+  'profile.company':            { it: 'Azienda',           en: 'Company',           es: 'Empresa',         fr: 'Entreprise',     de: 'Unternehmen',     pt: 'Empresa' },
+  'profile.not_found':          { it: 'Utente non trovato', en: 'User not found',   es: 'Usuario no encontrado', fr: 'Utilisateur introuvable', de: 'Nutzer nicht gefunden', pt: 'Utilizador não encontrado' },
+  'profile.edit_profile':       { it: 'Modifica profilo',  en: 'Edit profile',      es: 'Editar perfil',   fr: 'Modifier profil', de: 'Profil bearbeiten', pt: 'Editar perfil' },
 
   // ── Settings page ─────────────────────────────────────────────────────────
   'settings.profile_section':   { it: 'Profilo',           en: 'Profile',           es: 'Perfil',          fr: 'Profil',         de: 'Profil',          pt: 'Perfil' },

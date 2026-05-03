@@ -1,6 +1,6 @@
 // DevHub IT - API Client Library
 
-import type { Job, JobFilters, Course, Quiz, QuizResult, User, UserBadge, UserProgress, PlatformStats, NotificationsResponse, AuthUser, AuthSession, Listing, MapPoint, Post } from './types';
+import type { Job, JobFilters, Course, Quiz, QuizResult, User, UserBadge, UserProgress, PlatformStats, NotificationsResponse, AuthUser, AuthSession, Listing, MapPoint, Post, Comment, SearchResult } from './types';
 
 const API_BASE = '/api';
 
@@ -155,4 +155,61 @@ export async function createPost(data: { content: string; image_url?: string; po
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+// Post interactions
+export async function likePost(postId: number): Promise<{ success: boolean; likes_count: number; liked: boolean }> {
+  return fetchAPI(`/posts/${postId}/like`, { method: 'POST' });
+}
+
+export async function unlikePost(postId: number): Promise<{ success: boolean; likes_count: number; liked: boolean }> {
+  return fetchAPI(`/posts/${postId}/like`, { method: 'DELETE' });
+}
+
+export async function getPostLikeStatus(postId: number): Promise<{ liked: boolean }> {
+  return fetchAPI(`/posts/${postId}/like`);
+}
+
+export async function getComments(postId: number): Promise<{ comments: Comment[] }> {
+  return fetchAPI(`/posts/${postId}/comments`);
+}
+
+export async function createComment(postId: number, content: string): Promise<{ success: boolean; comments_count: number }> {
+  return fetchAPI(`/posts/${postId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+}
+
+// User follow
+export async function followUser(userId: number): Promise<{ success: boolean; status: string }> {
+  return fetchAPI(`/user/${userId}/follow`, { method: 'POST' });
+}
+
+export async function unfollowUser(userId: number): Promise<{ success: boolean; status: string }> {
+  return fetchAPI(`/user/${userId}/follow`, { method: 'DELETE' });
+}
+
+export async function getFollowStatus(userId: number): Promise<{ status: string; following: boolean }> {
+  return fetchAPI(`/user/${userId}/follow`);
+}
+
+// User search
+export async function searchUsers(params: {
+  q?: string;
+  role?: 'worker' | 'company';
+  city?: string;
+  limit?: number;
+}): Promise<{ results: SearchResult[] }> {
+  const sp = new URLSearchParams();
+  if (params.q) sp.set('q', params.q);
+  if (params.role) sp.set('role', params.role);
+  if (params.city) sp.set('city', params.city);
+  if (params.limit) sp.set('limit', String(params.limit));
+  return fetchAPI(`/users/search?${sp}`);
+}
+
+// Image upload
+export async function uploadImage(image: string, type: 'avatar' | 'post' = 'post'): Promise<{ success: boolean; url: string }> {
+  return fetchAPI('/upload', { method: 'POST', body: JSON.stringify({ image, type }) });
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, LayoutGrid, Map, BookOpen, User } from 'lucide-react';
+import { Home, LayoutGrid, Map, Search, User } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -16,7 +16,7 @@ export default function BottomNav() {
     { href: '/',         labelKey: 'nav.home',    icon: Home },
     { href: '/listings', labelKey: 'nav.board',   icon: LayoutGrid },
     { href: '/map',      labelKey: 'nav.map',     icon: Map },
-    { href: '/learn',    labelKey: 'nav.learn',   icon: BookOpen },
+    { href: '/search',   labelKey: 'nav.search',  icon: Search },
     { href: null as string | null, labelKey: 'nav.account', icon: User },
   ];
 
