@@ -4,10 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X } from 'lucide-react';
 import Link from 'next/link';
-import { getNotifications, markNotificationsRead } from '@/lib/api';
 import { ShimmerSkeleton } from '@/lib/animations';
-import { useAuth } from '@/lib/AuthContext';
+import { useNotifications } from '@/lib/NotificationContext';
+import { useLanguage } from '@/lib/LanguageContext';
 import type { Notification } from '@/lib/types';
+
+interface NotificationPanelProps {
+  fullWidth?: boolean;
+}
 
 const typeIcons: Record<string, string> = {
   system: '🔔',
@@ -30,28 +34,17 @@ function timeAgo(dateStr: string): string {
   return `${d}g`;
 }
 
-export default function NotificationPanel() {
-  const { user } = useAuth();
-  const userId = user?.id ?? 1;
+export default function NotificationPanel({ fullWidth = false }: NotificationPanelProps) {
+  const { t } = useLanguage();
+  const {
+    unreadCount, notifications, loading,
+    markAllRead, markRead, fetchNotifications,
+  } = useNotifications();
+
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Poll unread count every 30s
-    const fetchCount = async () => {
-      try {
-        const data = await getNotifications(userId);
-        setUnreadCount(data.unread_count);
-      } catch {}
-    };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
-  }, [userId]);
-
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
@@ -66,62 +59,80 @@ export default function NotificationPanel() {
   const handleOpen = async () => {
     if (open) { setOpen(false); return; }
     setOpen(true);
-    setLoading(true);
-    try {
-      const data = await getNotifications(userId);
-      setNotifications(data.notifications);
-      setUnreadCount(data.unread_count);
-    } catch {
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-    }
+    await fetchNotifications();
   };
 
-  const handleMarkAllRead = async () => {
-    try {
-      await markNotificationsRead(userId);
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
-      setUnreadCount(0);
-    } catch {}
-  };
+  const handleMarkAllRead = markAllRead;
 
   const handleNotificationClick = async (n: Notification) => {
     if (!n.is_read) {
-      try {
-        await markNotificationsRead(userId, n.id);
-        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: 1 } : x));
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      } catch {}
+      await markRead(n.id);
     }
     setOpen(false);
   };
 
   return (
     <div className="relative" ref={panelRef}>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={handleOpen}
-        aria-label="Notifiche"
-        className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${open ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400' : 'text-muted-foreground hover:bg-surface-2 dark:hover:bg-surface-2'}`}
-      >
-        <motion.div
-          animate={unreadCount > 0 ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
-          transition={{ duration: 0.5, repeat: unreadCount > 0 ? Infinity : 0, repeatDelay: 5 }}
+      {fullWidth ? (
+        /* Full-width sidebar row trigger */
+        <motion.button
+          whileHover={{ x: 3 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={handleOpen}
+          aria-label="Notifiche"
+          className={`w-full relative flex items-center gap-3.5 rounded-xl px-3 py-3 transition-all duration-200 cursor-pointer ${
+            open
+              ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 text-indigo-700 dark:text-indigo-300'
+              : 'text-muted hover:bg-surface-2/70 hover:text-foreground'
+          }`}
         >
-          <Bell className="w-5 h-5" strokeWidth={1.5} />
-        </motion.div>
-        {unreadCount > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-pink-500 text-[9px] font-black text-white shadow-sm shadow-red-500/30"
+          <div className="relative shrink-0">
+            <motion.div
+              animate={unreadCount > 0 ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.5, repeat: unreadCount > 0 ? Infinity : 0, repeatDelay: 5 }}
+            >
+              <Bell className="w-[22px] h-[22px]" strokeWidth={open ? 2.25 : 1.75} />
+            </motion.div>
+            {unreadCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-pink-500 text-[9px] font-black text-white shadow-sm shadow-red-500/30"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </motion.span>
+            )}
+          </div>
+          <span className={`font-semibold text-sm xl:block hidden ${open ? 'font-bold' : ''}`}>
+            {t('nav.notifications')}
+          </span>
+        </motion.button>
+      ) : (
+        /* Compact icon-only trigger */
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleOpen}
+          aria-label="Notifiche"
+          className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${open ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400' : 'text-muted-foreground hover:bg-surface-2 dark:hover:bg-surface-2'}`}
+        >
+          <motion.div
+            animate={unreadCount > 0 ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
+            transition={{ duration: 0.5, repeat: unreadCount > 0 ? Infinity : 0, repeatDelay: 5 }}
           >
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </motion.span>
-        )}
-      </motion.button>
+            <Bell className="w-5 h-5" strokeWidth={1.5} />
+          </motion.div>
+          {unreadCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-pink-500 text-[9px] font-black text-white shadow-sm shadow-red-500/30"
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </motion.span>
+          )}
+        </motion.button>
+      )}
 
       <AnimatePresence>
         {open && (
@@ -130,7 +141,7 @@ export default function NotificationPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-glass-border-subtle bg-glass-strong shadow-xl backdrop-blur-2xl"
+            className="absolute left-0 top-12 z-50 w-80 rounded-2xl border border-glass-border-subtle bg-glass-strong shadow-xl backdrop-blur-2xl"
           >
             <div className="flex items-center justify-between border-b border-glass-border-subtle px-4 py-3">
               <h3 className="font-bold text-foreground">Notifiche</h3>

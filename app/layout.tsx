@@ -4,8 +4,10 @@ import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
+import NotificationSheet from "@/components/NotificationSheet";
 import { AuthProvider } from "@/lib/AuthContext";
 import { LanguageProvider } from "@/lib/LanguageContext";
+import { NotificationProvider } from "@/lib/NotificationContext";
 import SplashScreen from "@/components/SplashScreen";
 import ThemeApplier from "@/components/ThemeApplier";
 
@@ -51,6 +53,7 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeApplier />
           <LanguageProvider>
+          <NotificationProvider>
           <SplashScreen />
         {/* Ambient mesh gradient background */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -63,6 +66,7 @@ export default function RootLayout({
         <div className="relative z-10 lg:hidden min-h-screen flex flex-col">
           <main className="flex-1 pt-16 pb-[calc(4rem+env(safe-area-inset-bottom,0px))]">{children}</main>
           <BottomNav />
+          <NotificationSheet />
         </div>
 
         {/* Desktop layout (≥ lg) — Instagram-style */}
@@ -73,7 +77,8 @@ export default function RootLayout({
           </div>
           <RightSidebar />
         </div>
-        </LanguageProvider>
+        </NotificationProvider>
+          </LanguageProvider>
         </AuthProvider>
       </body>
     </html>

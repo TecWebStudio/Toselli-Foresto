@@ -99,12 +99,7 @@ export default function LeftSidebar() {
         })}
 
         {/* Notifications (desktop) */}
-        <div className="relative">
-          <div className="flex items-center gap-3.5 rounded-xl px-3 py-3 text-muted hover:bg-surface-2/70 hover:text-foreground transition-all">
-            <NotificationPanel />
-            <span className="font-semibold text-sm xl:block hidden pointer-events-none">{t('nav.notifications')}</span>
-          </div>
-        </div>
+        <NotificationPanel fullWidth />
 
         {/* Publish CTA — only when logged in */}
         {user && (
