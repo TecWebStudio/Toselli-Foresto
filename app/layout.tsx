@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Outfit } from "next/font/google";
+import { Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import LeftSidebar from "@/components/LeftSidebar";
@@ -11,17 +11,17 @@ import { NotificationProvider } from "@/lib/NotificationContext";
 import SplashScreen from "@/components/SplashScreen";
 import ThemeApplier from "@/components/ThemeApplier";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="it" className="scroll-smooth">
       <body
-        className={`${spaceGrotesk.variable} ${outfit.variable} antialiased bg-zinc-50 dark:bg-zinc-950`}
+        className={`${syne.variable} ${dmSans.variable} antialiased bg-[#f9f9f8] dark:bg-[#0c0c0b]`}
       >
         <AuthProvider>
           <ThemeApplier />
@@ -57,9 +57,9 @@ export default function RootLayout({
           <SplashScreen />
         {/* Ambient mesh gradient background */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-indigo-500/[0.04] rounded-full blur-[100px]" />
-          <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] bg-purple-500/[0.04] rounded-full blur-[100px]" />
-          <div className="absolute -bottom-32 left-1/3 w-[450px] h-[450px] bg-violet-500/[0.03] rounded-full blur-[120px]" />
+          <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-blue-500/[0.035] rounded-full blur-[100px]" />
+          <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] bg-violet-500/[0.035] rounded-full blur-[100px]" />
+          <div className="absolute -bottom-32 left-1/3 w-[450px] h-[450px] bg-indigo-500/[0.025] rounded-full blur-[120px]" />
         </div>
 
         {/* Mobile layout (< lg) */}

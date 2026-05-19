@@ -12,7 +12,7 @@ import {
   Settings,
   UserPlus, UserCheck, Clock, Lock,
   MapPin, Globe, Heart, MessageCircle,
-  ChevronLeft, Building2, Code2,
+  ChevronLeft, Building2, Code2, Crown,
 } from 'lucide-react';
 import type { Post } from '@/lib/types';
 
@@ -37,6 +37,7 @@ interface PublicProfile {
   followers_count: number;
   following_count: number;
   follow_status: 'not_following' | 'pending' | 'following';
+  is_pro: number;
 }
 
 type FollowStatus = 'not_following' | 'pending' | 'following';
@@ -294,6 +295,12 @@ export default function PublicProfilePage() {
                 >
                   {profile.display_name || profile.username}
                 </motion.h2>
+                {profile.is_pro === 1 && (
+                  <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400/30 to-orange-400/20 border border-amber-300/40 px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm text-amber-200">
+                    <Crown className="w-3 h-3" strokeWidth={2} />
+                    PRO
+                  </span>
+                )}
                 <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm">
                   {isCompany
                     ? <><Building2 className="w-3 h-3" /> {t('profile.company')}</>

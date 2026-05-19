@@ -183,7 +183,10 @@ export interface AuthUser {
   country: string;
   created_at: string;
   language: string;
-  is_private: number; // 0 = public, 1 = private
+  is_private: number;  // 0 = public, 1 = private
+  is_pro: number;      // 0 = free, 1 = pro
+  pro_since: string | null;
+  pro_expires: string | null;
 }
 
 export interface Comment {

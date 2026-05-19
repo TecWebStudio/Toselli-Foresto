@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, LayoutGrid, Bell, Search, User } from 'lucide-react';
+import { Home, LayoutGrid, Bell, Search, User, Crown } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useNotifications } from '@/lib/NotificationContext';
@@ -13,6 +13,8 @@ export default function BottomNav() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { unreadCount, openSheet } = useNotifications();
+
+  const isPro = (user?.is_pro ?? 0) === 1;
 
   const linkItems = [
     { href: '/',         labelKey: 'nav.home',    icon: Home },
@@ -36,7 +38,7 @@ export default function BottomNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {/* Subtle gradient line at top */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
       <div className="mx-auto flex max-w-lg items-center justify-around">
         {/* Link-based nav items */}
@@ -52,7 +54,7 @@ export default function BottomNav() {
               {active && (
                 <motion.div
                   layoutId="bottomNavIndicator"
-                  className="absolute top-0 h-[2px] w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                  className="absolute top-0 h-[2px] w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
@@ -60,7 +62,7 @@ export default function BottomNav() {
                 whileTap={{ scale: 0.82 }}
                 className={`relative flex items-center justify-center w-10 h-8 rounded-full transition-all duration-200 ${
                   active
-                    ? 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
                     : 'text-muted-foreground'
                 }`}
               >
@@ -68,7 +70,7 @@ export default function BottomNav() {
               </motion.div>
               <span className={`text-[10px] font-medium transition-colors duration-200 ${
                 active
-                  ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                  ? 'text-blue-600 dark:text-blue-400 font-semibold'
                   : 'text-muted-foreground'
               }`}>
                 {t(item.labelKey)}
@@ -108,7 +110,7 @@ export default function BottomNav() {
           </span>
         </button>
 
-        {/* Remaining link items */}
+        {/* Remaining link items (Search + Account) */}
         {linkItems.slice(2).map((item) => {
           const href = item.href ?? (user ? '/profile' : '/auth');
           const active = isActive(item.href);
@@ -122,7 +124,7 @@ export default function BottomNav() {
               {active && (
                 <motion.div
                   layoutId="bottomNavIndicator"
-                  className="absolute top-0 h-[2px] w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                  className="absolute top-0 h-[2px] w-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 />
               )}
@@ -130,18 +132,24 @@ export default function BottomNav() {
                 whileTap={{ scale: 0.82 }}
                 className={`relative flex items-center justify-center w-10 h-8 rounded-full transition-all duration-200 ${
                   active
-                    ? 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
+                    ? 'bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
                     : 'text-muted-foreground'
                 }`}
               >
                 <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2 : 1.5} />
                 {item.href === null && !user && (
-                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-indigo-500 border-2 border-white dark:border-zinc-950" />
+                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-blue-500 border-2 border-white dark:border-zinc-950" />
+                )}
+                {/* Pro crown for account tab */}
+                {item.href === null && isPro && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 border-[1.5px] border-white dark:border-zinc-950">
+                    <Crown className="w-2 h-2 text-white" strokeWidth={3} />
+                  </span>
                 )}
               </motion.div>
               <span className={`text-[10px] font-medium transition-colors duration-200 ${
                 active
-                  ? 'text-indigo-600 dark:text-indigo-400 font-semibold'
+                  ? 'text-blue-600 dark:text-blue-400 font-semibold'
                   : 'text-muted-foreground'
               }`}>
                 {t(item.labelKey)}

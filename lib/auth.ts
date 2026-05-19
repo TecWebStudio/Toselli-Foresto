@@ -66,6 +66,9 @@ export async function getSessionUser(): Promise<AuthUser | null> {
     created_at: row.created_at as string,
     language: (row.language as string) || 'it',
     is_private: (row.is_private as number) ?? 0,
+    is_pro: (row.is_pro as number) ?? 0,
+    pro_since: (row.pro_since as string | null) ?? null,
+    pro_expires: (row.pro_expires as string | null) ?? null,
   };
 }
 

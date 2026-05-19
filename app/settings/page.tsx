@@ -12,7 +12,7 @@ import type { FollowRequest } from '@/lib/types';
 import {
   User, Lock, Globe, Bell, Palette, Shield,
   ChevronRight, Check, X, Eye, EyeOff,
-  AlertCircle, CheckCircle2, UserCheck, UserX, Clock, Camera, Upload,
+  AlertCircle, CheckCircle2, UserCheck, UserX, Clock, Camera, Upload, Crown,
 } from 'lucide-react';
 
 // ─── Colour Palette ────────────────────────────────────────────────────────
@@ -199,6 +199,11 @@ export default function SettingsPage() {
   const [notifFollow, setNotifFollow] = useState(true);
   const [prefLoading, setPrefLoading] = useState(false);
   const [prefFeedback, setPrefFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  // — Subscription state
+  const [subLoading, setSubLoading] = useState(false);
+  const [subFeedback, setSubFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Initialise from user
   useEffect(() => {
@@ -409,6 +414,26 @@ export default function SettingsPage() {
     setPrefFeedback({ type: 'success', msg: t('settings.save') + ' ✓' });
     clearFeedback(setPrefFeedback);
     void notifBadge; void notifJob; void notifFollow;
+  };
+
+  const cancelPro = async () => {
+    setSubLoading(true);
+    setSubFeedback(null);
+    try {
+      const res = await fetch('/api/billing/cancel', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSubFeedback({ type: 'success', msg: 'Piano annullato. Torni a trovarci presto! ✓' });
+        setShowCancelConfirm(false);
+        await refresh();
+      } else {
+        setSubFeedback({ type: 'error', msg: data.error || 'Errore durante la cancellazione.' });
+      }
+    } catch {
+      setSubFeedback({ type: 'error', msg: 'Errore di rete. Riprova.' });
+    }
+    setSubLoading(false);
+    clearFeedback(setSubFeedback);
   };
 
   // ── Save button (inline so it can use t()) ────────────────────────────────
@@ -899,6 +924,150 @@ export default function SettingsPage() {
             </div>
             <AnimatePresence>{prefFeedback && <Feedback type={prefFeedback.type} message={prefFeedback.msg} />}</AnimatePresence>
             <SaveButton onClick={savePreferences} loading={prefLoading} />
+          </SectionCard>
+
+          {/* ── 7. Abbonamento ── */}
+          <SectionCard
+            icon={Crown}
+            title="Abbonamento"
+            subtitle="Gestisci il tuo piano DevHub"
+            index={7}
+          >
+            {(user?.is_pro ?? 0) === 1 ? (
+              <div className="space-y-4">
+                {/* Pro status banner */}
+                <div className="relative overflow-hidden rounded-xl border border-amber-300/40 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 dark:border-amber-700/30 p-4">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-amber-400/10 rounded-full blur-xl" />
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 shadow-lg shadow-amber-500/25">
+                        <Crown className="w-5 h-5 text-white" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Piano Pro attivo</p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          {user.pro_expires
+                            ? `Rinnovo il ${new Date(user.pro_expires).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                            : 'Abbonamento attivo'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-xs font-bold bg-amber-400/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full border border-amber-300/50">
+                      PRO
+                    </span>
+                  </div>
+                </div>
+
+                {/* Features list */}
+                <div className="space-y-2">
+                  {[
+                    'Analytics avanzate del profilo',
+                    'Portfolio progetti con link GitHub/live',
+                    'Badge Pro sul profilo pubblico',
+                    'Accesso prioritario alle nuove funzionalità',
+                  ].map((feat) => (
+                    <div key={feat} className="flex items-center gap-2.5 text-sm text-zinc-600 dark:text-zinc-400">
+                      <Check className="w-4 h-4 shrink-0 text-amber-500" strokeWidth={2.5} />
+                      {feat}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Cancel flow */}
+                <AnimatePresence mode="wait">
+                  {!showCancelConfirm ? (
+                    <motion.button
+                      key="cancel-btn"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setShowCancelConfirm(true)}
+                      className="text-xs text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors underline underline-offset-2"
+                    >
+                      Annulla abbonamento
+                    </motion.button>
+                  ) : (
+                    <motion.div
+                      key="cancel-confirm"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      className="rounded-xl border border-red-200 dark:border-red-800/40 bg-red-50 dark:bg-red-900/10 p-4 space-y-3"
+                    >
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400">Sei sicuro di voler annullare?</p>
+                      <p className="text-xs text-red-600/80 dark:text-red-400/70">
+                        Perderai accesso alle funzionalità Pro al termine del periodo corrente.
+                      </p>
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={cancelPro}
+                          disabled={subLoading}
+                          className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                        >
+                          {subLoading ? (
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                              className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full"
+                            />
+                          ) : <X className="w-3.5 h-3.5" />}
+                          Conferma annullamento
+                        </motion.button>
+                        <button
+                          onClick={() => setShowCancelConfirm(false)}
+                          className="rounded-lg border border-zinc-200 dark:border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        >
+                          Mantieni Pro
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Free user — upgrade CTA */
+              <div className="space-y-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-zinc-900 dark:text-white">Piano Free</p>
+                      <p className="text-xs text-zinc-500 mt-0.5">Accesso alle funzionalità base di DevHub</p>
+                    </div>
+                    <span className="text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 px-2.5 py-1 rounded-full">
+                      FREE
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-300/40 bg-gradient-to-br from-amber-50/60 to-orange-50/40 dark:from-amber-900/10 dark:to-orange-900/5 dark:border-amber-700/20 p-4 space-y-3">
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Con Pro ottieni</p>
+                  <div className="space-y-2">
+                    {[
+                      'Analytics avanzate del profilo',
+                      'Portfolio progetti con link GitHub/live',
+                      'Badge Pro sul profilo pubblico',
+                      'Accesso prioritario alle nuove funzionalità',
+                    ].map((feat) => (
+                      <div key={feat} className="flex items-center gap-2.5 text-xs text-zinc-600 dark:text-zinc-400">
+                        <Crown className="w-3.5 h-3.5 shrink-0 text-amber-500" strokeWidth={2} />
+                        {feat}
+                      </div>
+                    ))}
+                  </div>
+                  <a
+                    href="/pricing"
+                    className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-shadow"
+                  >
+                    <Crown className="w-4 h-4" strokeWidth={2} />
+                    Passa a Pro — da €7,99/mese
+                  </a>
+                </div>
+              </div>
+            )}
+
+            <AnimatePresence>{subFeedback && <Feedback type={subFeedback.type} message={subFeedback.msg} />}</AnimatePresence>
           </SectionCard>
 
           {/* ── Account info footer ── */}

@@ -16,7 +16,7 @@ export async function GET(
     const result = await db.execute({
       sql: `SELECT id, username, display_name, avatar_color, avatar_url, theme_color,
                    title, bio, city, region, country, role, company_name, company_website,
-                   is_private, created_at
+                   is_private, created_at, COALESCE(is_pro, 0) as is_pro
             FROM auth_users
             WHERE username = ?
             LIMIT 1`,

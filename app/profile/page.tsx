@@ -11,7 +11,29 @@ import { getUserBadges, getUserProgress, getStats } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
 import type { UserBadge, UserProgress, PlatformStats } from '@/lib/types';
-import { Settings } from 'lucide-react';
+import { Settings, Crown, Plus, ExternalLink, GitBranch, BarChart3 } from 'lucide-react';
+
+// ─── Mock portfolio data (for Pro users) ────────────────────────────────────
+const MOCK_PROJECTS = [
+  {
+    id: 1,
+    name: 'DevTracker',
+    description: 'App per tracciare il progresso di apprendimento dei developer, con integrazione GitHub.',
+    stack: ['Next.js', 'TypeScript', 'Prisma'],
+    github: '#',
+    live: '#',
+    color: '#4f6ef7',
+  },
+  {
+    id: 2,
+    name: 'APIForge',
+    description: 'Tool CLI per generare boilerplate REST API con autenticazione JWT e documentazione Swagger.',
+    stack: ['Node.js', 'Express', 'OpenAPI'],
+    github: '#',
+    live: null,
+    color: '#0ea57a',
+  },
+];
 
 export default function ProfilePage() {
   const { user: authUser, loading: authLoading } = useAuth();
@@ -21,7 +43,9 @@ export default function ProfilePage() {
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'badges' | 'progress' | 'stats'>('badges');
+  const [activeTab, setActiveTab] = useState<'badges' | 'progress' | 'stats' | 'portfolio'>('badges');
+
+  const isPro = (authUser?.is_pro ?? 0) === 1;
 
   useEffect(() => {
     if (authLoading) return;
@@ -60,6 +84,13 @@ export default function ProfilePage() {
     ? Math.round(progress.filter(p => p.quiz_completed).reduce((acc, p) => acc + (p.quiz_score || 0), 0) / quizzesCompleted)
     : 0;
 
+  const tabs = [
+    { key: 'badges' as const, label: t('profile.badges'), icon: '🏅' },
+    { key: 'progress' as const, label: t('profile.progress'), icon: '📊' },
+    { key: 'stats' as const, label: t('profile.platform'), icon: '🌐' },
+    ...(isPro ? [{ key: 'portfolio' as const, label: 'Portfolio', icon: '💼' }] : []),
+  ];
+
   return (
     <>
       <TopBar />
@@ -70,7 +101,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 text-white text-center shadow-2xl shadow-indigo-500/25"
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 p-6 text-white text-center shadow-2xl shadow-blue-500/20"
           >
             {/* Settings gear */}
             <Link
@@ -79,34 +110,65 @@ export default function ProfilePage() {
             >
               <Settings className="w-4 h-4 text-white" strokeWidth={1.75} />
             </Link>
+            {/* Analytics link (pro only) */}
+            {isPro && (
+              <Link
+                href="/analytics"
+                className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/15 hover:bg-white/30 transition-colors backdrop-blur-sm text-xs font-semibold"
+              >
+                <BarChart3 className="w-3 h-3" strokeWidth={2} />
+                Analytics
+              </Link>
+            )}
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-pink-500/20 rounded-full blur-2xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-violet-500/20 rounded-full blur-2xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
 
             <div className="relative z-10">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.2 }}
-                className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full bg-white/15 backdrop-blur-md border-2 border-white/25 text-3xl font-black"
-                style={{ background: authUser?.avatar_color ? `${authUser.avatar_color}44` : undefined }}
+                className="relative mx-auto mb-3 inline-block"
               >
-                {authUser?.display_name?.charAt(0).toUpperCase() || authUser?.username?.charAt(0).toUpperCase() || 'U'}
+                <div
+                  className={`flex h-20 w-20 items-center justify-center rounded-full bg-white/15 backdrop-blur-md border-2 border-white/25 text-3xl font-black ${isPro ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-transparent' : ''}`}
+                  style={{ background: authUser?.avatar_color ? `${authUser.avatar_color}44` : undefined }}
+                >
+                  {authUser?.display_name?.charAt(0).toUpperCase() || authUser?.username?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                {isPro && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: 'spring' }}
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 shadow-lg shadow-amber-400/40 border-2 border-white"
+                  >
+                    <Crown className="w-3 h-3 text-white" strokeWidth={3} />
+                  </motion.div>
+                )}
               </motion.div>
-              <motion.h2
+
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-xl font-black"
+                className="flex items-center justify-center gap-2"
               >
-                {authUser?.display_name || authUser?.username || 'Utente'}
-              </motion.h2>
+                <h2 className="text-xl font-black">
+                  {authUser?.display_name || authUser?.username || 'Utente'}
+                </h2>
+                {isPro && (
+                  <span className="pro-badge">PRO</span>
+                )}
+              </motion.div>
+
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.35 }}
-                className="text-sm text-indigo-200 mt-0.5"
+                className="text-sm text-blue-200 mt-0.5"
               >
                 @{authUser?.username} {authUser?.city ? `· 📍 ${authUser.city}` : ''}
               </motion.p>
@@ -114,7 +176,7 @@ export default function ProfilePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.37 }}
-                className="text-xs text-indigo-300 mt-0.5"
+                className="text-xs text-blue-300 mt-0.5"
               >
                 {authUser?.email}
               </motion.p>
@@ -123,7 +185,7 @@ export default function ProfilePage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="mt-2 text-sm text-indigo-100"
+                  className="mt-2 text-sm text-blue-100"
                 >
                   {authUser.bio}
                 </motion.p>
@@ -149,10 +211,27 @@ export default function ProfilePage() {
                     <div className="text-2xl font-black">
                       <AnimatedCounter value={stat.value} duration={1} />
                     </div>
-                    <div className="text-[10px] text-indigo-200 font-medium">{stat.icon} {stat.label}</div>
+                    <div className="text-[10px] text-blue-200 font-medium">{stat.icon} {stat.label}</div>
                   </motion.div>
                 ))}
               </motion.div>
+
+              {/* Pro upgrade nudge for free users */}
+              {!isPro && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="mt-4"
+                >
+                  <Link href="/pricing">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-xs font-semibold text-amber-200 border border-amber-400/30 cursor-pointer">
+                      <Crown className="w-3 h-3" strokeWidth={2.5} />
+                      Passa a Pro
+                    </div>
+                  </Link>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -163,26 +242,22 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800 relative"
+            className="flex rounded-2xl bg-surface-2 p-1 relative gap-0.5"
           >
-            {([
-              { key: 'badges' as const, label: t('profile.badges'), icon: '🏅' },
-              { key: 'progress' as const, label: t('profile.progress'), icon: '📊' },
-              { key: 'stats' as const, label: t('profile.platform'), icon: '🌐' },
-            ]).map(tab => (
+            {tabs.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative flex-1 rounded-xl py-2.5 text-xs font-bold transition-colors z-10 ${
+                className={`relative flex-1 rounded-xl py-2 text-[11px] font-bold transition-colors z-10 ${
                   activeTab === tab.key
-                    ? 'text-zinc-900 dark:text-white'
-                    : 'text-zinc-500 dark:text-zinc-400'
+                    ? 'text-foreground'
+                    : 'text-muted'
                 }`}
               >
                 {activeTab === tab.key && (
                   <motion.div
                     layoutId="profileTab"
-                    className="absolute inset-0 bg-white dark:bg-zinc-700 rounded-xl shadow-sm"
+                    className="absolute inset-0 bg-surface-0 rounded-xl shadow-sm"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -210,12 +285,12 @@ export default function ProfilePage() {
                   >
                     🎯
                   </motion.span>
-                  <h3 className="mt-3 font-bold text-zinc-900 dark:text-white">{t('profile.no_badges')}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">{t('profile.no_badges_desc')}</p>
+                  <h3 className="mt-3 font-bold text-foreground">{t('profile.no_badges')}</h3>
+                  <p className="mt-1 text-sm text-muted">{t('profile.no_badges_desc')}</p>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href="/learn"
-                      className="mt-4 inline-block rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/25"
+                      className="mt-4 inline-block rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25"
                     >
                       {t('profile.explore_courses')}
                     </Link>
@@ -250,7 +325,7 @@ export default function ProfilePage() {
                   <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     <AnimatedCounter value={avgScore} />%
                   </div>
-                  <div className="text-xs text-zinc-500 mt-0.5 font-medium">{t('profile.avg_score')}</div>
+                  <div className="text-xs text-muted mt-0.5 font-medium">{t('profile.avg_score')}</div>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -261,14 +336,14 @@ export default function ProfilePage() {
                   <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     <AnimatedCounter value={totalModulesCompleted} />
                   </div>
-                  <div className="text-xs text-zinc-500 mt-0.5 font-medium">{t('profile.modules_completed')}</div>
+                  <div className="text-xs text-muted mt-0.5 font-medium">{t('profile.modules_completed')}</div>
                 </motion.div>
               </div>
 
               {progress.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-sm text-zinc-500">{t('profile.no_courses')}</p>
-                  <Link href="/learn" className="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:underline">
+                  <p className="text-sm text-muted">{t('profile.no_courses')}</p>
+                  <Link href="/learn" className="mt-2 inline-block text-sm font-semibold text-blue-600 hover:underline">
                     {t('profile.start_course')}
                   </Link>
                 </div>
@@ -282,10 +357,10 @@ export default function ProfilePage() {
                   >
                     <Link
                       href={`/learn/${p.course_id}`}
-                      className="block rounded-xl border border-zinc-200/80 p-4 transition-all hover:border-indigo-300/60 hover:shadow-lg hover:shadow-indigo-500/5 dark:border-zinc-700 dark:hover:border-indigo-700/50 card-shine"
+                      className="block rounded-xl border border-glass-border-subtle p-4 transition-all hover:border-blue-300/60 hover:shadow-lg hover:shadow-blue-500/5 card-shine"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-bold text-zinc-900 dark:text-white">
+                        <span className="text-sm font-bold text-foreground">
                           {p.course_title || `Corso #${p.course_id}`}
                         </span>
                         {p.quiz_completed ? (
@@ -306,7 +381,7 @@ export default function ProfilePage() {
                         value={p.total_modules ? Math.round(((p.completed_modules?.length || 0) / p.total_modules) * 100) : 0}
                         className="h-1.5"
                       />
-                      <p className="mt-1.5 text-xs text-zinc-500 font-medium">
+                      <p className="mt-1.5 text-xs text-muted font-medium">
                         {p.completed_modules?.length || 0}/{p.total_modules || '?'} {t('profile.modules_of')}
                       </p>
                     </Link>
@@ -324,14 +399,14 @@ export default function ProfilePage() {
               transition={{ duration: 0.3 }}
               className="space-y-3"
             >
-              <h3 className="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-indigo-500 to-purple-500" />
+              <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
+                <span className="w-1 h-4 rounded-full bg-gradient-to-b from-blue-500 to-indigo-500" />
                 {t('profile.platform_numbers')}
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: t('profile.active_positions'),  value: stats.total_jobs,    icon: '💼', gradient: 'from-blue-50 to-cyan-50 border-blue-200/60 dark:from-blue-900/10 dark:to-cyan-900/10 dark:border-blue-800/30' },
-                  { label: t('profile.available_courses'), value: stats.total_courses,  icon: '📚', gradient: 'from-purple-50 to-indigo-50 border-purple-200/60 dark:from-purple-900/10 dark:to-indigo-900/10 dark:border-purple-800/30' },
+                  { label: t('profile.available_courses'), value: stats.total_courses,  icon: '📚', gradient: 'from-violet-50 to-indigo-50 border-violet-200/60 dark:from-violet-900/10 dark:to-indigo-900/10 dark:border-violet-800/30' },
                   { label: t('profile.active_quizzes'),   value: stats.total_quizzes,  icon: '📝', gradient: 'from-orange-50 to-amber-50 border-orange-200/60 dark:from-orange-900/10 dark:to-amber-900/10 dark:border-orange-800/30' },
                   { label: t('profile.registered_users'), value: stats.total_users,    icon: '👥', gradient: 'from-emerald-50 to-teal-50 border-emerald-200/60 dark:from-emerald-900/10 dark:to-teal-900/10 dark:border-emerald-800/30' },
                 ].map((stat, i) => (
@@ -350,13 +425,74 @@ export default function ProfilePage() {
                     >
                       {stat.icon}
                     </motion.div>
-                    <div className="text-2xl font-black text-zinc-900 dark:text-white">
+                    <div className="text-2xl font-black text-foreground">
                       <AnimatedCounter value={stat.value} duration={1.2} />
                     </div>
-                    <div className="text-xs text-zinc-500 mt-0.5 font-medium">{stat.label}</div>
+                    <div className="text-xs text-muted mt-0.5 font-medium">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'portfolio' && isPro && (
+            <motion.div
+              key="portfolio"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted">I tuoi progetti pubblici</p>
+                <button className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                  <Plus className="w-3 h-3" />
+                  Aggiungi
+                </button>
+              </div>
+              {MOCK_PROJECTS.map((proj, i) => (
+                <motion.div
+                  key={proj.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="rounded-2xl border border-glass-border-subtle bg-surface-0 p-4 hover-lift"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="flex h-9 w-9 items-center justify-center rounded-xl text-white text-sm font-black shadow-sm"
+                        style={{ background: `linear-gradient(135deg, ${proj.color}, ${proj.color}99)` }}
+                      >
+                        {proj.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-foreground">{proj.name}</h4>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {proj.github && (
+                        <a href={proj.github} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-7 w-7 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors text-muted hover:text-foreground">
+                          <GitBranch className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        </a>
+                      )}
+                      {proj.live && (
+                        <a href={proj.live} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-7 w-7 rounded-lg bg-surface-2 hover:bg-surface-3 transition-colors text-muted hover:text-foreground">
+                          <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.75} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted leading-relaxed mb-3">{proj.description}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {proj.stack.map(tech => (
+                      <span key={tech} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-2 text-muted border border-glass-border-subtle">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           )}
         </div>

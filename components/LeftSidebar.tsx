@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Home, LayoutGrid, Map, GraduationCap, Plus, LogOut, User, Settings, Code2, Search } from 'lucide-react';
+import { Home, LayoutGrid, Map, GraduationCap, Plus, LogOut, User, Settings, Code2, Search, Crown, BarChart3 } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 import { useAuth } from '@/lib/AuthContext';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -15,6 +15,8 @@ export default function LeftSidebar() {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const isPro = (user?.is_pro ?? 0) === 1;
 
   const navItems = [
     { href: '/',         labelKey: 'nav.home',     icon: Home },
@@ -49,11 +51,11 @@ export default function LeftSidebar() {
           <motion.div
             whileHover={{ scale: 1.06, rotate: 3 }}
             whileTap={{ scale: 0.95 }}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-indigo-500/20"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 shadow-lg shadow-indigo-500/20"
           >
             <Code2 className="w-5 h-5 text-white" strokeWidth={2.5} />
           </motion.div>
-          <span className="text-xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent xl:block hidden">
+          <span className="text-xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-500 bg-clip-text text-transparent xl:block hidden">
             DevHub IT
           </span>
         </Link>
@@ -71,14 +73,14 @@ export default function LeftSidebar() {
                 whileTap={{ scale: 0.97 }}
                 className={`relative flex items-center gap-3.5 rounded-xl px-3 py-3 transition-all duration-200 group cursor-pointer ${
                   active
-                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 text-indigo-700 dark:text-indigo-300'
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 text-blue-700 dark:text-blue-300'
                     : 'text-muted hover:bg-surface-2/70 hover:text-foreground'
                 }`}
               >
                 {active && (
                   <motion.div
                     layoutId="sidebarActive"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-500"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-gradient-to-b from-blue-500 to-indigo-500"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -89,7 +91,7 @@ export default function LeftSidebar() {
                 {active && (
                   <motion.div
                     layoutId="sidebarGlow"
-                    className="absolute inset-0 rounded-xl bg-indigo-500/5 pointer-events-none"
+                    className="absolute inset-0 rounded-xl bg-blue-500/5 pointer-events-none"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -101,13 +103,46 @@ export default function LeftSidebar() {
         {/* Notifications (desktop) */}
         <NotificationPanel fullWidth />
 
+        {/* Analytics — pro only */}
+        {isPro && (
+          <Link href="/analytics">
+            <motion.div
+              whileHover={{ x: 3 }}
+              whileTap={{ scale: 0.97 }}
+              className={`relative flex items-center gap-3.5 rounded-xl px-3 py-3 transition-all duration-200 cursor-pointer ${
+                pathname === '/analytics'
+                  ? 'bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 text-amber-700 dark:text-amber-400'
+                  : 'text-muted hover:bg-surface-2/70 hover:text-foreground'
+              }`}
+            >
+              <BarChart3 className="w-[22px] h-[22px]" strokeWidth={1.75} />
+              <span className="font-semibold text-sm xl:block hidden">Analytics</span>
+              <span className="ml-auto xl:block hidden pro-badge text-[9px] px-1.5 py-0.5">PRO</span>
+            </motion.div>
+          </Link>
+        )}
+
+        {/* Pricing / Upgrade CTA */}
+        {!isPro && (
+          <Link href="/pricing">
+            <motion.div
+              whileHover={{ x: 3 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-3.5 rounded-xl px-3 py-3 mt-1 border border-amber-300/40 dark:border-amber-700/30 bg-amber-50/60 dark:bg-amber-950/15 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70 dark:hover:bg-amber-950/30 transition-all cursor-pointer"
+            >
+              <Crown className="w-[22px] h-[22px]" strokeWidth={1.75} />
+              <span className="font-bold text-sm xl:block hidden">Upgrade a Pro</span>
+            </motion.div>
+          </Link>
+        )}
+
         {/* Publish CTA — only when logged in */}
         {user && (
           <Link href="/publish">
             <motion.div
               whileHover={{ x: 3 }}
               whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-3.5 rounded-xl px-3 py-3 mt-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:from-indigo-500/20 hover:to-purple-500/20 transition-all cursor-pointer"
+              className="flex items-center gap-3.5 rounded-xl px-3 py-3 mt-2 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 hover:from-blue-500/20 hover:to-indigo-500/20 transition-all cursor-pointer"
             >
               <Plus className="w-6 h-6" strokeWidth={1.75} />
               <span className="font-bold text-sm xl:block hidden">
@@ -127,18 +162,27 @@ export default function LeftSidebar() {
               onClick={() => setMenuOpen((v) => !v)}
               className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-surface-2/70 transition-colors cursor-pointer text-left"
             >
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white shadow-sm"
-                style={{ background: user.avatar_color ?? 'linear-gradient(135deg,#6366f1,#a855f7)' }}
-              >
-                {initials}
+              <div className="relative shrink-0">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-black text-white shadow-sm ${isPro ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-background' : ''}`}
+                  style={{ background: user.avatar_color ?? 'linear-gradient(135deg,#4f6ef7,#7c5cfc)' }}
+                >
+                  {initials}
+                </div>
+                {isPro && (
+                  <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 shadow-sm">
+                    <Crown className="w-2 h-2 text-white" strokeWidth={3} />
+                  </div>
+                )}
               </div>
               <div className="min-w-0 xl:block hidden flex-1">
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">
                     {user.display_name}
                   </p>
-                  <span className="text-xs">{user.role === 'company' ? '🏢' : '👨‍💻'}</span>
+                  {isPro && (
+                    <span className="pro-badge shrink-0">PRO</span>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-500 truncate">@{user.username}</p>
               </div>
@@ -166,6 +210,14 @@ export default function LeftSidebar() {
                       {user.city && (
                         <p className="text-xs text-muted-foreground mt-0.5">📍 {user.city}</p>
                       )}
+                      {isPro && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <span className="pro-badge">PRO</span>
+                          <span className="text-xs text-muted-foreground">
+                            scade {user.pro_expires ? new Date(user.pro_expires).toLocaleDateString('it-IT') : '—'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="p-1.5 space-y-0.5">
                       <Link href="/profile" onClick={() => setMenuOpen(false)}>
@@ -174,6 +226,14 @@ export default function LeftSidebar() {
                           {t('nav.my_profile')}
                         </div>
                       </Link>
+                      {isPro && (
+                        <Link href="/analytics" onClick={() => setMenuOpen(false)}>
+                          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors cursor-pointer text-sm text-amber-600 dark:text-amber-400">
+                            <BarChart3 className="w-4 h-4" strokeWidth={1.75} />
+                            Analytics Pro
+                          </div>
+                        </Link>
+                      )}
                       <Link href="/settings" onClick={() => setMenuOpen(false)}>
                         <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-surface-2 transition-colors cursor-pointer text-sm text-muted hover:text-foreground">
                           <Settings className="w-4 h-4" strokeWidth={1.75} />
@@ -186,6 +246,14 @@ export default function LeftSidebar() {
                           {user.role === 'company' ? t('nav.publish_offer') : t('nav.propose_service')}
                         </div>
                       </Link>
+                      {!isPro && (
+                        <Link href="/pricing" onClick={() => setMenuOpen(false)}>
+                          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors cursor-pointer text-sm text-amber-600 dark:text-amber-400 font-medium">
+                            <Crown className="w-4 h-4" strokeWidth={1.75} />
+                            Upgrade a Pro
+                          </div>
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer text-sm text-red-600 dark:text-red-400"
@@ -204,13 +272,13 @@ export default function LeftSidebar() {
             <motion.div
               whileHover={{ x: 3 }}
               whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 border border-indigo-500/30 hover:border-indigo-500/60 hover:bg-indigo-500/5 transition-all cursor-pointer"
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 border border-blue-500/30 hover:border-blue-500/60 hover:bg-blue-500/5 transition-all cursor-pointer"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted">
                 <LogOut className="w-5 h-5" strokeWidth={1.75} />
               </div>
               <div className="min-w-0 xl:block hidden">
-                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{t('nav.login')}</p>
+                <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{t('nav.login')}</p>
                 <p className="text-xs text-zinc-500">{t('nav.or_register')}</p>
               </div>
             </motion.div>
