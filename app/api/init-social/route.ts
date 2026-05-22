@@ -25,7 +25,7 @@ export async function POST() {
           token TEXT NOT NULL UNIQUE,
           expires_at TEXT NOT NULL,
           created_at TEXT DEFAULT (datetime('now')),
-          FOREIGN KEY (user_id) REFERENCES users(id)
+          FOREIGN KEY (user_id) REFERENCES auth_users(id)
         )`,
         args: [],
       },
