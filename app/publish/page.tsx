@@ -35,6 +35,7 @@ export default function PublishPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
   const [form, setForm] = useState({
@@ -82,6 +83,7 @@ export default function PublishPage() {
     }
     setSubmitting(true);
     setError('');
+    setUpgradeRequired(false);
     try {
       await createListing({
         listing_type,
@@ -95,8 +97,14 @@ export default function PublishPage() {
         tags: form.tags,
       });
       router.push('/listings');
-    } catch {
-      setError('Errore durante la pubblicazione. Riprova.');
+    } catch (e: unknown) {
+      const err = e as Error & { upgrade_required?: boolean };
+      if (err?.upgrade_required) {
+        setUpgradeRequired(true);
+        setError('Hai già 1 annuncio attivo. Passa a Pro per annunci illimitati.');
+      } else {
+        setError('Errore durante la pubblicazione. Riprova.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -291,6 +299,11 @@ export default function PublishPage() {
             className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-400"
           >
             {error}
+            {upgradeRequired && (
+              <Link href="/pricing" className="ml-2 font-semibold underline hover:no-underline">
+                Vai a Pro →
+              </Link>
+            )}
           </motion.div>
         )}
 

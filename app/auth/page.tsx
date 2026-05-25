@@ -70,12 +70,14 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
+    // Don't re-search if a city was just confirmed from the dropdown/quick buttons
+    if (form.city && form.city === locationQuery) { setSuggestions([]); return; }
     const t = setTimeout(() => searchLocation(locationQuery), 400);
     return () => clearTimeout(t);
-  }, [locationQuery, searchLocation]);
+  }, [locationQuery, searchLocation, form.city]);
 
-  // Also filter local cities
-  const localCities = locationQuery.length >= 1
+  // Also filter local cities (hide when city already confirmed)
+  const localCities = !form.city && locationQuery.length >= 1
     ? ITALIAN_CITIES.filter((c) => c.toLowerCase().startsWith(locationQuery.toLowerCase())).slice(0, 4)
     : [];
 
@@ -398,7 +400,11 @@ export default function AuthPage() {
                           className={inputClass}
                           placeholder="Roma, Milano, Torino…"
                           value={locationQuery}
-                          onChange={(e) => { setLocationQuery(e.target.value); setError(''); }}
+                          onChange={(e) => {
+                            setLocationQuery(e.target.value);
+                            setError('');
+                            if (form.city) setForm((f) => ({ ...f, city: '', region: '', lat: 0, lng: 0 }));
+                          }}
                         />
                         {/* Quick Italian cities */}
                         {locationQuery.length < 2 && (

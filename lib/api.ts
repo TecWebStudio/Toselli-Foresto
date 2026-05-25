@@ -10,7 +10,11 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
     ...options,
   });
   if (!res.ok) {
-    throw new Error(`API Error: ${res.status} ${res.statusText}`);
+    const body = await res.json().catch(() => ({})) as { error?: string; upgrade_required?: boolean };
+    const message = body?.error || res.statusText;
+    const err = new Error(`${res.status}: ${message}`) as Error & { upgrade_required?: boolean };
+    if (body?.upgrade_required) err.upgrade_required = true;
+    throw err;
   }
   return res.json();
 }

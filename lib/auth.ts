@@ -45,6 +45,11 @@ export async function getSessionUser(): Promise<AuthUser | null> {
   const row = result.rows[0];
 
   const avatarColor = (row.avatar_color as string) || '#6366f1';
+  const rawIsPro = (row.is_pro as number) ?? 0;
+  const proExpires = (row.pro_expires as string | null) ?? null;
+  // Auto-expire: treat pro as inactive if the subscription period has passed
+  const effectiveIsPro = rawIsPro === 1 && proExpires !== null && new Date(proExpires) > new Date() ? 1 : 0;
+
   return {
     id: row.id as number,
     email: row.email as string,
@@ -66,9 +71,9 @@ export async function getSessionUser(): Promise<AuthUser | null> {
     created_at: row.created_at as string,
     language: (row.language as string) || 'it',
     is_private: (row.is_private as number) ?? 0,
-    is_pro: (row.is_pro as number) ?? 0,
+    is_pro: effectiveIsPro,
     pro_since: (row.pro_since as string | null) ?? null,
-    pro_expires: (row.pro_expires as string | null) ?? null,
+    pro_expires: proExpires,
   };
 }
 

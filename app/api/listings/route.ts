@@ -68,6 +68,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'I lavoratori possono solo pubblicare proposte di servizio' }, { status: 403 });
     }
 
+    // Enforce 1 active listing limit for free users (Pro = unlimited)
+    if ((user.is_pro ?? 0) !== 1) {
+      const existingListings = await db.execute({
+        sql: 'SELECT COUNT(*) as count FROM listings WHERE author_id = ? AND is_active = 1',
+        args: [user.id],
+      });
+      if (Number(existingListings.rows[0].count) >= 1) {
+        return NextResponse.json({
+          error: 'Con il piano Free puoi avere al massimo 1 annuncio attivo. Passa a Pro per annunci illimitati.',
+          upgrade_required: true,
+        }, { status: 403 });
+      }
+    }
+
     const result = await db.execute({
       sql: `INSERT INTO listings (author_id, listing_type, title, description, category, level, work_type, salary_min, salary_max, tags, lat, lng, city, region)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
