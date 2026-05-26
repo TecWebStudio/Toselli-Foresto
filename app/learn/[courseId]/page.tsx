@@ -85,9 +85,23 @@ export default function CourseDetailPage({ params }: { params: Promise<{ courseI
     try {
       await updateModuleProgress(authUser.id, Number(courseId), moduleIndex);
       setProgress(prev => {
-        if (!prev) return prev;
-        const existing = new Set(prev.completed_modules || []);
+        const existing = new Set(prev?.completed_modules || []);
         existing.add(moduleIndex);
+        if (!prev) {
+          return {
+            id: 0,
+            user_id: authUser.id,
+            course_id: Number(courseId),
+            completed_modules: Array.from(existing),
+            quiz_score: 0,
+            quiz_completed: 0,
+            total_modules: totalModules,
+            course_title: course?.title ?? '',
+            badge_name: course?.badge_name ?? '',
+            badge_color: course?.badge_color ?? '',
+            course_level: course?.level ?? '',
+          };
+        }
         return { ...prev, completed_modules: Array.from(existing) };
       });
     } catch { /* ignore */ }
